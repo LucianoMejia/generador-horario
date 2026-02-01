@@ -4,13 +4,13 @@
     --font-size: 11px;
     --header-size: 13px;
     --time-column-width: 80px;
-    --border-radius: 6px;
-    --header-color-start: #667eea;
-    --header-color-end: #764ba2;
-    --time-column-color-start: #f8f9fa;
-    --time-column-color-end: #e9ecef;
+    --border-radius: 12px;
+    --header-color-start: #f5f5f7;
+    --header-color-end: #ffffff;
+    --time-column-color-start: #f5f5f7;
+    --time-column-color-end: #ffffff;
     --cell-bg-color: #ffffff;
-    --schedule-bg-color: #f8f9fa;
+    --schedule-bg-color: #f5f5f7;
     
     --apple-blue: #007AFF;
     --apple-purple: #5856D6;
@@ -18,8 +18,8 @@
     --apple-gray: #8E8E93;
     --apple-light-gray: #F2F2F7;
     --apple-dark: #1C1C1E;
-    --apple-border: rgba(0, 0, 0, 0.1);
-    --apple-shadow: rgba(0, 0, 0, 0.12);
+    --apple-border: rgba(0, 0, 0, 0.06);
+    --apple-shadow: rgba(0, 0, 0, 0.06);
 }
 
 * {
@@ -30,7 +30,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #f5f5f7 100%);
     background-attachment: fixed;
     min-height: 100vh;
     padding: 30px 20px;
@@ -47,26 +47,25 @@ body {
 .main-header {
     text-align: center;
     margin-bottom: 40px;
-    padding: 30px;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
     border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 .main-header h1 {
-    color: white;
+    color: var(--apple-dark);
     font-size: 3em;
     margin-bottom: 12px;
     font-weight: 700;
     letter-spacing: -1px;
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
 }
 
 .main-header .subtitle {
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--apple-gray);
     font-size: 1.2em;
     font-weight: 400;
     letter-spacing: 0.3px;
@@ -80,13 +79,13 @@ body {
 }
 
 .controls {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
     padding: 30px;
     border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
-    border: 1px solid var(--apple-border);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     position: sticky;
     top: 20px;
 }
@@ -227,10 +226,10 @@ body {
 .btn-add {
     width: 100%;
     padding: 14px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--apple-blue);
     color: white;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -239,7 +238,7 @@ body {
 
 .btn-add:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3);
 }
 
 .btn-add:active {
@@ -354,28 +353,28 @@ body {
 }
 
 .schedule-container {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
     padding: 30px;
     border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
-    border: 1px solid var(--apple-border);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .schedule-header-editable {
     text-align: center;
     margin-bottom: 25px;
     padding: 20px;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    background: rgba(0, 122, 255, 0.08);
     border-radius: 16px;
-    border: 2px dashed rgba(102, 126, 234, 0.3);
+    border: 1.5px solid rgba(0, 122, 255, 0.15);
     transition: all 0.3s ease;
 }
 
 .schedule-header-editable:hover {
-    border-color: rgba(102, 126, 234, 0.6);
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+    border-color: rgba(0, 122, 255, 0.3);
+    background: rgba(0, 122, 255, 0.12);
 }
 
 .schedule-title {
@@ -440,7 +439,6 @@ body {
 }
 
 .btn-download,
-.btn-print,
 .btn-clear,
 .btn-settings,
 .btn-export,
@@ -462,20 +460,20 @@ body {
 }
 
 .btn-settings:hover {
-    background: #4E4DBF;
+    background: #5456D6;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(88, 86, 214, 0.3);
+    box-shadow: 0 6px 16px rgba(88, 86, 214, 0.2);
 }
 
 .btn-export {
-    background: #FF9500;
+    background: var(--apple-blue);
     color: white;
 }
 
 .btn-export:hover {
-    background: #E68600;
+    background: #0051D5;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(255, 149, 0, 0.3);
+    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.2);
 }
 
 .btn-import {
@@ -500,17 +498,6 @@ body {
     box-shadow: 0 6px 16px rgba(52, 199, 89, 0.3);
 }
 
-.btn-print {
-    background: var(--apple-blue);
-    color: white;
-}
-
-.btn-print:hover {
-    background: #0051D5;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.3);
-}
-
 .btn-clear {
     background: #FF3B30;
     color: white;
@@ -526,54 +513,53 @@ body {
     display: grid;
     grid-template-columns: var(--time-column-width) repeat(6, 1fr);
     gap: 0;
-    background: var(--schedule-bg-color);
+    background: white;
     border: 1px solid var(--apple-border);
     border-radius: 16px;
     overflow: hidden;
     width: 100%;
-    box-shadow: 0 2px 8px var(--apple-shadow);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .schedule-cell {
-    background: var(--cell-bg-color);
+    background: white;
     padding: var(--cell-padding);
     min-height: var(--cell-height);
     display: flex;
     align-items: stretch;
     justify-content: stretch;
     position: relative;
-    border-right: 1px solid #e8e8e8;
-    border-bottom: 1px solid #e8e8e8;
+    border-right: 1px solid var(--apple-border);
+    border-bottom: 1px solid var(--apple-border);
 }
 
 .schedule-header-cell {
-    background: linear-gradient(135deg, var(--header-color-start) 0%, var(--header-color-end) 100%);
-    color: white;
+    background: rgba(245, 245, 247, 0.8);
+    color: var(--apple-dark);
     font-weight: 700;
     font-size: var(--header-size);
     padding: 10px 6px;
-    border-right: 1px solid rgba(255,255,255,0.2);
-    border-bottom: 2px solid rgba(255,255,255,0.2);
+    border-right: 1px solid var(--apple-border);
+    border-bottom: 1.5px solid var(--apple-border);
     display: flex;
     align-items: center;
     justify-content: center;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
 .time-cell {
-    background: linear-gradient(135deg, var(--time-column-color-start) 0%, var(--time-column-color-end) 100%);
+    background: rgba(245, 245, 247, 0.6);
     font-weight: 700;
     font-size: 12px;
-    color: #495057;
+    color: var(--apple-gray);
     padding: 6px 4px;
-    border-right: 2px solid #dee2e6;
+    border-right: 1.5px solid var(--apple-border);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .class-block {
-    background: #4CAF50;
+    background: #007AFF;
     color: white;
     padding: 6px 4px;
     border-radius: var(--border-radius);
@@ -585,17 +571,17 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
     position: relative;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .class-block:hover {
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
     z-index: 10;
     border-color: rgba(255, 255, 255, 0.4);
 }
@@ -822,7 +808,6 @@ body {
     }
     
     .btn-download,
-    .btn-print,
     .btn-clear,
     .btn-settings,
     .btn-export,
@@ -876,7 +861,6 @@ body {
     }
     
     .btn-download,
-    .btn-print,
     .btn-clear,
     .btn-settings,
     .btn-export,
@@ -898,14 +882,14 @@ body {
 }
 
 .settings-panel {
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--apple-border);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     border-radius: 16px;
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .settings-panel h3 {
@@ -1002,47 +986,48 @@ body {
 }
 
 .btn-reset {
-    background: #FF9800;
+    background: var(--apple-blue);
     color: white;
 }
 
 .btn-reset:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
 }
 
 .btn-close {
-    background: #607D8B;
+    background: var(--apple-gray);
     color: white;
 }
 
 .btn-close:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(96, 125, 139, 0.4);
+    box-shadow: 0 4px 12px rgba(142, 142, 147, 0.2);
 }
 
 .app-footer {
     text-align: center;
     padding: 30px 20px;
     margin-top: 50px;
-    color: white;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    color: var(--apple-dark);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
     border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .app-footer p {
     margin: 8px 0;
     font-size: 1em;
     letter-spacing: 0.3px;
+    color: var(--apple-gray);
 }
 
 .app-footer strong {
     font-weight: 600;
-    color: rgba(255, 255, 255, 1);
+    color: var(--apple-dark);
     font-size: 1.1em;
 }
 

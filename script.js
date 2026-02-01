@@ -359,26 +359,99 @@ document.getElementById('clearBtn').addEventListener('click', () => {
     }
 });
 
-// Imprimir horario
-document.getElementById('printBtn').addEventListener('click', () => {
-    window.print();
-});
-
-// Descargar horario
+// Descargar horario como imagen
 document.getElementById('downloadBtn').addEventListener('click', async () => {
-    const scheduleElement = document.getElementById('schedule');
+    const scheduleTitle = document.getElementById('scheduleTitle').textContent || 'Mi Horario Semanal';
     
     try {
-        showNotification('📸 Generando imagen...', 'info');
+        showNotification('⬇️ Generando descarga...', 'info');
         
-        const canvas = await html2canvas(scheduleElement, {
+        // Crear contenedor para capturar ambos elementos
+        const captureContainer = document.createElement('div');
+        captureContainer.style.backgroundColor = '#ffffff';
+        captureContainer.style.padding = '20px';
+        captureContainer.style.width = '100%';
+        captureContainer.style.fontFamily = getComputedStyle(document.body).fontFamily;
+        
+        // Clonar encabezado
+        const headerElement = document.getElementById('scheduleHeaderContainer');
+        const headerClone = headerElement.cloneNode(true);
+        captureContainer.appendChild(headerClone);
+        
+        // Clonar horario
+        const scheduleElement = document.getElementById('schedule');
+        const scheduleClone = scheduleElement.cloneNode(true);
+        captureContainer.appendChild(scheduleClone);
+        
+        // Obtener variables CSS actuales
+        const root = document.documentElement;
+        const styles = window.getComputedStyle(root);
+        
+        // Extraer todas las variables CSS personalizadas
+        let cssVars = '';
+        for (let prop of styles) {
+            if (prop.startsWith('--')) {
+                const value = styles.getPropertyValue(prop).trim();
+                cssVars += `${prop}: ${value}; `;
+            }
+        }
+        
+        // Crear un estilo temporal con todas las variables CSS y reglas importantes
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = `
+            :root { ${cssVars} }
+            * { 
+                border-radius: ${styles.getPropertyValue('--border-radius').trim()} !important;
+            }
+            .class-block {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+                border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            }
+            .schedule {
+                background: white !important;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+            }
+            .schedule-cell {
+                background: white !important;
+                border-color: rgba(0, 0, 0, 0.06) !important;
+            }
+            .schedule-header-cell {
+                background: rgba(245, 245, 247, 0.8) !important;
+            }
+            .time-cell {
+                background: rgba(245, 245, 247, 0.6) !important;
+            }
+        `;
+        document.head.appendChild(styleSheet);
+        
+        // Agregar al DOM temporalmente
+        captureContainer.style.position = 'absolute';
+        captureContainer.style.left = '-10000px';
+        captureContainer.style.top = '0';
+        document.body.appendChild(captureContainer);
+        
+        // Esperar a que se renderice
+        await new Promise(r => setTimeout(r, 250));
+        
+        // Capturar con html2canvas con escala 1.5 para mejor calidad de color
+        const canvas = await html2canvas(captureContainer, {
             backgroundColor: '#ffffff',
-            scale: 2,
-            logging: false
+            scale: 1.5,
+            logging: false,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            imageTimeout: 0
         });
         
+        // Remover elementos temporales
+        document.body.removeChild(captureContainer);
+        document.head.removeChild(styleSheet);
+        
+        // Descargar imagen
         const link = document.createElement('a');
-        link.download = `horario-${new Date().toISOString().split('T')[0]}.png`;
+        const fileName = scheduleTitle.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase();
+        link.download = `${fileName || 'horario'}-${new Date().toISOString().split('T')[0]}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
         
@@ -387,11 +460,6 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
         showNotification('❌ Error al descargar el horario', 'error');
         console.error(error);
     }
-});
-
-// Botón de imprimir
-document.getElementById('printBtn').addEventListener('click', () => {
-    window.print();
 });
 
 // ===== IMPORTAR/EXPORTAR JSON =====
