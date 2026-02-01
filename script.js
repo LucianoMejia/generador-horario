@@ -1,0 +1,733 @@
+// Datos del horario
+let scheduleData = JSON.parse(localStorage.getItem('scheduleData')) || [];
+
+// Configuración de horarios con intervalos de 30 minutos
+function generateTimeSlots(start, end) {
+    const slots = [];
+    for (let hour = start; hour <= end; hour++) {
+        slots.push(`${hour.toString().padStart(2, '0')}:00`);
+        if (hour < end) {
+            slots.push(`${hour.toString().padStart(2, '0')}:30`);
+        }
+    }
+    return slots;
+}
+
+// Calcular rango de horas basado en las clases
+function calculateTimeRange() {
+    if (scheduleData.length === 0) {
+        return { start: 7, end: 22 };
+    }
+    
+    let minHour = 24;
+    let maxHour = 0;
+    
+    scheduleData.forEach(classItem => {
+        const [startHour] = classItem.startTime.split(':').map(Number);
+        const [endHour] = classItem.endTime.split(':').map(Number);
+        
+        minHour = Math.min(minHour, startHour);
+        maxHour = Math.max(maxHour, endHour);
+    });
+    
+    // Añadir una hora de margen antes y después
+    minHour = Math.max(6, minHour - 1);
+    maxHour = Math.min(23, maxHour + 1);
+    
+    return { start: minHour, end: maxHour };
+}
+
+function updateTimeSlots() {
+    const range = calculateTimeRange();
+    timeSlots = generateTimeSlots(range.start, range.end);
+    
+    // Actualizar info del rango
+    const infoEl = document.getElementById('timeRangeInfo');
+    if (infoEl) {
+        if (scheduleData.length === 0) {
+            infoEl.textContent = '📊 Vista automática';
+        } else {
+            infoEl.textContent = `📊 Horario: ${range.start}:00 - ${range.end}:00`;
+        }
+    }
+}
+
+let timeSlots = generateTimeSlots(7, 22);
+const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+// Generar horario vacío
+function generateSchedule() {
+    const schedule = document.getElementById('schedule');
+    schedule.innerHTML = '';
+    
+    // Limpiar visibilidad de todas las celdas
+    document.querySelectorAll('.schedule-cell').forEach(cell => {
+        cell.style.visibility = 'visible';
+    });
+    
+    // Header vacío
+    const cornerCell = document.createElement('div');
+    cornerCell.className = 'schedule-cell schedule-header-cell';
+    cornerCell.textContent = 'Hora';
+    schedule.appendChild(cornerCell);
+    
+    // Headers de días
+    days.forEach(day => {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'schedule-cell schedule-header-cell';
+        dayCell.textContent = day;
+        schedule.appendChild(dayCell);
+    });
+    
+    // Filas de tiempo
+    timeSlots.forEach(time => {
+        // Celda de tiempo
+        const timeCell = document.createElement('div');
+        timeCell.className = 'schedule-cell time-cell';
+        timeCell.textContent = time;
+        schedule.appendChild(timeCell);
+        
+        // Celdas de días
+        days.forEach(day => {
+            const cell = document.createElement('div');
+            cell.className = 'schedule-cell';
+            cell.dataset.time = time;
+            cell.dataset.day = day;
+            schedule.appendChild(cell);
+        });
+    });
+    
+    // Renderizar clases
+    renderClasses();
+}
+
+// Función para editar clase
+function editClass(index) {
+    const classItem = scheduleData[index];
+    
+    // Llenar el formulario
+    document.getElementById('className').value = classItem.name;
+    document.getElementById('color').value = classItem.color;
+    document.getElementById('startTime').value = classItem.startTime;
+    document.getElementById('endTime').value = classItem.endTime;
+    document.getElementById('room').value = classItem.room || '';
+    document.getElementById('editingIndex').value = index;
+    
+    // Marcar los días
+    document.querySelectorAll('.days-selector input[type="checkbox"]').forEach(checkbox => {
+        checkbox.checked = classItem.days.includes(checkbox.value);
+    });
+    
+    // Cambiar UI del formulario
+    document.getElementById('formTitle').textContent = '✏️ Editar Clase';
+    document.getElementById('submitBtn').textContent = '💾 Guardar Cambios';
+    document.getElementById('cancelBtn').style.display = 'block';
+    
+    // Scroll al formulario
+    document.querySelector('.controls').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Función para cancelar edición
+function cancelEdit() {
+    document.getElementById('classForm').reset();
+    document.getElementById('editingIndex').value = '-1';
+    document.getElementById('formTitle').textContent = '➕ Nueva Clase';
+    document.getElementById('submitBtn').textContent = '✨ Agregar Clase';
+    document.getElementById('cancelBtn').style.display = 'none';
+    document.getElementById('color').value = getRandomColor();
+}
+
+// Renderizar clases en el horario
+function renderClasses() {
+    // Limpiar todas las clases existentes
+    document.querySelectorAll('.class-block').forEach(block => block.remove());
+    
+    scheduleData.forEach((classItem, index) => {
+        classItem.days.forEach(day => {
+            const [startHour, startMin] = classItem.startTime.split(':').map(Number);
+            const [endHour, endMin] = classItem.endTime.split(':').map(Number);
+            
+            // Calcular la duración en minutos
+            const startTotalMin = startHour * 60 + startMin;
+            const endTotalMin = endHour * 60 + endMin;
+            const durationMin = endTotalMin - startTotalMin;
+            
+            // Encontrar el slot de tiempo más cercano
+            const startTimeStr = `${startHour.toString().padStart(2, '0')}:${startMin < 30 ? '00' : '30'}`;
+            
+            // Buscar todas las celdas que abarca esta clase
+            const slotsNeeded = Math.ceil(durationMin / 30);
+            const cells = [];
+            
+            for (let i = 0; i < slotsNeeded; i++) {
+                const slotIndex = timeSlots.indexOf(startTimeStr) + i;
+                if (slotIndex < timeSlots.length) {
+                    const timeStr = timeSlots[slotIndex];
+                    const cell = document.querySelector(`[data-time="${timeStr}"][data-day="${day}"]`);
+                    if (cell) cells.push(cell);
+                }
+            }
+            
+            // Crear el bloque de clase en la primera celda
+            if (cells.length > 0) {
+                const firstCell = cells[0];
+                
+                const classBlock = document.createElement('div');
+                classBlock.className = 'class-block';
+                classBlock.style.backgroundColor = classItem.color;
+                
+                // Ajustar altura para que ocupe múltiples celdas si es necesario
+                if (cells.length > 1) {
+                    // Obtener altura real de la celda desde CSS
+                    const cellHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-height') || '40');
+                    const cellPadding = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-padding') || '2');
+                    const totalHeight = (cellHeight * cells.length) - cellPadding;
+                    classBlock.style.height = `${totalHeight}px`;
+                    classBlock.style.position = 'absolute';
+                    classBlock.style.top = `${cellPadding}px`;
+                    classBlock.style.left = `${cellPadding}px`;
+                    classBlock.style.right = `${cellPadding}px`;
+                    classBlock.style.zIndex = '5';
+                }
+                
+                const className = document.createElement('div');
+                className.className = 'class-name';
+                className.textContent = classItem.name;
+                
+                const classTime = document.createElement('div');
+                classTime.className = 'class-time';
+                classTime.textContent = `${classItem.startTime} - ${classItem.endTime}`;
+                
+                classBlock.appendChild(className);
+                classBlock.appendChild(classTime);
+                
+                if (classItem.room) {
+                    const classRoom = document.createElement('div');
+                    classRoom.className = 'class-room';
+                    classRoom.textContent = `📍 ${classItem.room}`;
+                    classBlock.appendChild(classRoom);
+                }
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = '×';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteClass(index);
+                };
+                
+                // Añadir evento de clic para editar
+                classBlock.onclick = (e) => {
+                    if (!e.target.classList.contains('delete-btn')) {
+                        editClass(index);
+                    }
+                };
+                
+                classBlock.appendChild(deleteBtn);
+                firstCell.appendChild(classBlock);
+                
+                // Marcar las celdas restantes como ocupadas
+                for (let i = 1; i < cells.length; i++) {
+                    cells[i].style.visibility = 'hidden';
+                }
+            }
+        });
+    });
+    
+    updateClassList();
+}
+
+// Actualizar lista de clases
+function updateClassList() {
+    const classList = document.getElementById('classList');
+    
+    if (scheduleData.length === 0) {
+        classList.innerHTML = '<p class="empty-state">No hay clases aún</p>';
+        return;
+    }
+    
+    classList.innerHTML = scheduleData.map((classItem, index) => `
+        <div class="class-item" style="border-left-color: ${classItem.color}" onclick="editClass(${index})">
+            <div class="class-item-info">
+                <div class="class-item-name">${classItem.name}</div>
+                <div class="class-item-details">
+                    ${classItem.startTime} - ${classItem.endTime} | ${classItem.days.join(', ')}
+                    ${classItem.room ? ` | 📍 ${classItem.room}` : ''}
+                </div>
+            </div>
+            <button class="class-item-remove" onclick="event.stopPropagation(); deleteClass(${index})">×</button>
+        </div>
+    `).join('');
+}
+
+// Agregar o editar clase
+document.getElementById('classForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const name = document.getElementById('className').value.trim();
+    const color = document.getElementById('color').value;
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const room = document.getElementById('room').value.trim();
+    const editingIndex = parseInt(document.getElementById('editingIndex').value);
+    
+    const selectedDays = Array.from(document.querySelectorAll('.days-selector input[type="checkbox"]:checked'))
+        .map(checkbox => checkbox.value);
+    
+    if (selectedDays.length === 0) {
+        showNotification('⚠️ Selecciona al menos un día', 'warning');
+        return;
+    }
+    
+    if (startTime >= endTime) {
+        showNotification('⚠️ La hora de inicio debe ser anterior a la hora de fin', 'warning');
+        return;
+    }
+    
+    const classData = {
+        name,
+        color,
+        startTime,
+        endTime,
+        days: selectedDays,
+        room
+    };
+    
+    if (editingIndex >= 0) {
+        // Editar clase existente
+        scheduleData[editingIndex] = classData;
+        showNotification('✅ Clase actualizada correctamente', 'success');
+    } else {
+        // Agregar nueva clase
+        scheduleData.push(classData);
+        showNotification('✅ Clase agregada correctamente', 'success');
+    }
+    
+    saveData();
+    updateTimeSlots();
+    generateSchedule();
+    
+    // Limpiar formulario
+    cancelEdit();
+});
+
+// Botón de cancelar
+document.getElementById('cancelBtn').addEventListener('click', cancelEdit);
+
+// Eliminar clase
+function deleteClass(index) {
+    if (confirm('¿Estás seguro de eliminar esta clase?')) {
+        scheduleData.splice(index, 1);
+        saveData();
+        cancelEdit(); // Cancelar edición si estaba editando la clase eliminada
+        updateTimeSlots();
+        generateSchedule();
+        showNotification('🗑️ Clase eliminada', 'info');
+    }
+}
+
+// Limpiar todo
+document.getElementById('clearBtn').addEventListener('click', () => {
+    if (scheduleData.length === 0) {
+        showNotification('⚠️ No hay clases para limpiar', 'warning');
+        return;
+    }
+    
+    if (confirm('¿Estás seguro de eliminar todo el horario?')) {
+        scheduleData = [];
+        saveData();
+        cancelEdit();
+        updateTimeSlots();
+        generateSchedule();
+        showNotification('🗑️ Horario limpiado', 'info');
+    }
+});
+
+// Imprimir horario
+document.getElementById('printBtn').addEventListener('click', () => {
+    window.print();
+});
+
+// Descargar horario
+document.getElementById('downloadBtn').addEventListener('click', async () => {
+    const scheduleElement = document.getElementById('schedule');
+    
+    try {
+        showNotification('📸 Generando imagen...', 'info');
+        
+        const canvas = await html2canvas(scheduleElement, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            logging: false
+        });
+        
+        const link = document.createElement('a');
+        link.download = `horario-${new Date().toISOString().split('T')[0]}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        
+        showNotification('✅ Horario descargado correctamente', 'success');
+    } catch (error) {
+        showNotification('❌ Error al descargar el horario', 'error');
+        console.error(error);
+    }
+});
+
+// Botón de imprimir
+document.getElementById('printBtn').addEventListener('click', () => {
+    window.print();
+});
+
+// ===== IMPORTAR/EXPORTAR JSON =====
+
+// Exportar a JSON
+document.getElementById('exportJsonBtn').addEventListener('click', () => {
+    const exportData = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        scheduleData: scheduleData,
+        designSettings: designSettings
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `horario_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showNotification('✅ Horario exportado exitosamente', 'success');
+});
+
+// Importar desde JSON
+document.getElementById('importJsonBtn').addEventListener('click', () => {
+    document.getElementById('importJsonFile').click();
+});
+
+document.getElementById('importJsonFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const importedData = JSON.parse(event.target.result);
+            
+            // Validar estructura
+            if (!importedData.scheduleData || !Array.isArray(importedData.scheduleData)) {
+                throw new Error('Formato de archivo inválido');
+            }
+            
+            // Validar cada clase
+            const validClasses = importedData.scheduleData.every(classItem => 
+                classItem.name && 
+                classItem.color && 
+                classItem.startTime && 
+                classItem.endTime && 
+                Array.isArray(classItem.days)
+            );
+            
+            if (!validClasses) {
+                throw new Error('Los datos del horario son inválidos');
+            }
+            
+            // Confirmar importación
+            if (scheduleData.length > 0) {
+                if (!confirm('¿Deseas reemplazar el horario actual? Esta acción no se puede deshacer.')) {
+                    e.target.value = ''; // Reset file input
+                    return;
+                }
+            }
+            
+            // Importar datos
+            scheduleData = importedData.scheduleData;
+            localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+            
+            // Importar configuración de diseño si existe
+            if (importedData.designSettings) {
+                designSettings = { ...defaultSettings, ...importedData.designSettings };
+                localStorage.setItem('designSettings', JSON.stringify(designSettings));
+                applyDesignSettings();
+            }
+            
+            // Actualizar vista
+            updateTimeSlots();
+            generateSchedule();
+            
+            showNotification('✅ Horario importado exitosamente', 'success');
+            
+        } catch (error) {
+            showNotification('❌ Error al importar: ' + error.message, 'error');
+        }
+        
+        // Reset file input
+        e.target.value = '';
+    };
+    
+    reader.onerror = () => {
+        showNotification('❌ Error al leer el archivo', 'error');
+        e.target.value = '';
+    };
+    
+    reader.readAsText(file);
+});
+
+// Guardar datos en localStorage
+function saveData() {
+    localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+}
+
+// Colores predefinidos
+const colors = ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0', '#F44336', '#00BCD4', '#FFC107'];
+
+function getRandomColor() {
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+// Selector de colores predefinidos
+document.querySelectorAll('.color-preset').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const color = btn.dataset.color;
+        document.getElementById('color').value = color;
+    });
+});
+
+// Mostrar notificación mejorada
+function showNotification(message, type = 'info') {
+    const colors = {
+        success: '#4CAF50',
+        error: '#f44336',
+        warning: '#FF9800',
+        info: '#2196F3'
+    };
+    
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${colors[type] || colors.info};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 10px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        font-weight: 600;
+        max-width: 350px;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Agregar animaciones CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// ===== CONFIGURACIÓN DE DISEÑO =====
+const defaultSettings = {
+    cellHeight: 40,
+    fontSize: 11,
+    cellPadding: 2,
+    headerSize: 13,
+    timeColumnWidth: 80,
+    borderRadius: 6,
+    headerColorStart: '#667eea',
+    headerColorEnd: '#764ba2',
+    timeColumnColorStart: '#f8f9fa',
+    timeColumnColorEnd: '#e9ecef',
+    cellBackgroundColor: '#ffffff',
+    scheduleBgColor: '#f8f9fa'
+};
+
+// Cargar configuración guardada o usar valores predeterminados
+let designSettings = JSON.parse(localStorage.getItem('designSettings')) || {...defaultSettings};
+
+// Aplicar configuración al cargar
+function applyDesignSettings() {
+    const root = document.documentElement;
+    root.style.setProperty('--cell-height', `${designSettings.cellHeight}px`);
+    root.style.setProperty('--font-size', `${designSettings.fontSize}px`);
+    root.style.setProperty('--cell-padding', `${designSettings.cellPadding}px`);
+    root.style.setProperty('--header-size', `${designSettings.headerSize}px`);
+    root.style.setProperty('--time-column-width', `${designSettings.timeColumnWidth}px`);
+    root.style.setProperty('--border-radius', `${designSettings.borderRadius}px`);
+    root.style.setProperty('--header-color-start', designSettings.headerColorStart);
+    root.style.setProperty('--header-color-end', designSettings.headerColorEnd);
+    root.style.setProperty('--time-column-color-start', designSettings.timeColumnColorStart);
+    root.style.setProperty('--time-column-color-end', designSettings.timeColumnColorEnd);
+    root.style.setProperty('--cell-bg-color', designSettings.cellBackgroundColor);
+    root.style.setProperty('--schedule-bg-color', designSettings.scheduleBgColor);
+    
+    // Actualizar valores mostrados
+    document.getElementById('cellHeightValue').textContent = `${designSettings.cellHeight}px`;
+    document.getElementById('fontSizeValue').textContent = `${designSettings.fontSize}px`;
+    document.getElementById('cellPaddingValue').textContent = `${designSettings.cellPadding}px`;
+    document.getElementById('headerSizeValue').textContent = `${designSettings.headerSize}px`;
+    document.getElementById('timeColumnWidthValue').textContent = `${designSettings.timeColumnWidth}px`;
+    document.getElementById('borderRadiusValue').textContent = `${designSettings.borderRadius}px`;
+    
+    // Actualizar controles deslizantes
+    document.getElementById('cellHeight').value = designSettings.cellHeight;
+    document.getElementById('fontSize').value = designSettings.fontSize;
+    document.getElementById('cellPadding').value = designSettings.cellPadding;
+    document.getElementById('headerSize').value = designSettings.headerSize;
+    document.getElementById('timeColumnWidth').value = designSettings.timeColumnWidth;
+    document.getElementById('borderRadius').value = designSettings.borderRadius;
+    
+    // Actualizar selectores de color
+    document.getElementById('headerColorStart').value = designSettings.headerColorStart;
+    document.getElementById('headerColorEnd').value = designSettings.headerColorEnd;
+    document.getElementById('timeColumnColorStart').value = designSettings.timeColumnColorStart;
+    document.getElementById('timeColumnColorEnd').value = designSettings.timeColumnColorEnd;
+    document.getElementById('cellBackgroundColor').value = designSettings.cellBackgroundColor;
+    document.getElementById('scheduleBgColor').value = designSettings.scheduleBgColor;
+}
+
+// Guardar configuración
+function saveDesignSettings() {
+    localStorage.setItem('designSettings', JSON.stringify(designSettings));
+}
+
+// Event listeners para controles de diseño
+document.getElementById('cellHeight').addEventListener('input', (e) => {
+    designSettings.cellHeight = parseInt(e.target.value);
+    document.getElementById('cellHeightValue').textContent = `${e.target.value}px`;
+    applyDesignSettings();
+    saveDesignSettings();
+    generateSchedule(); // Regenerar para aplicar cambios
+});
+
+document.getElementById('fontSize').addEventListener('input', (e) => {
+    designSettings.fontSize = parseInt(e.target.value);
+    document.getElementById('fontSizeValue').textContent = `${e.target.value}px`;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+document.getElementById('cellPadding').addEventListener('input', (e) => {
+    designSettings.cellPadding = parseInt(e.target.value);
+    document.getElementById('cellPaddingValue').textContent = `${e.target.value}px`;
+    applyDesignSettings();
+    saveDesignSettings();
+    generateSchedule();
+});
+
+document.getElementById('headerSize').addEventListener('input', (e) => {
+    designSettings.headerSize = parseInt(e.target.value);
+    document.getElementById('headerSizeValue').textContent = `${e.target.value}px`;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+document.getElementById('timeColumnWidth').addEventListener('input', (e) => {
+    designSettings.timeColumnWidth = parseInt(e.target.value);
+    document.getElementById('timeColumnWidthValue').textContent = `${e.target.value}px`;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+document.getElementById('borderRadius').addEventListener('input', (e) => {
+    designSettings.borderRadius = parseInt(e.target.value);
+    document.getElementById('borderRadiusValue').textContent = `${e.target.value}px`;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+// Event listeners para selectores de color
+document.getElementById('headerColorStart').addEventListener('input', (e) => {
+    designSettings.headerColorStart = e.target.value;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+document.getElementById('headerColorEnd').addEventListener('input', (e) => {
+    designSettings.headerColorEnd = e.target.value;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+document.getElementById('timeColumnColorStart').addEventListener('input', (e) => {
+    designSettings.timeColumnColorStart = e.target.value;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+document.getElementById('timeColumnColorEnd').addEventListener('input', (e) => {
+    designSettings.timeColumnColorEnd = e.target.value;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+document.getElementById('cellBackgroundColor').addEventListener('input', (e) => {
+    designSettings.cellBackgroundColor = e.target.value;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+document.getElementById('scheduleBgColor').addEventListener('input', (e) => {
+    designSettings.scheduleBgColor = e.target.value;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+// Botón de configuración
+document.getElementById('settingsBtn').addEventListener('click', () => {
+    const panel = document.getElementById('settingsPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+});
+
+// Botón cerrar configuración
+document.getElementById('closeSettings').addEventListener('click', () => {
+    document.getElementById('settingsPanel').style.display = 'none';
+});
+
+// Botón restaurar configuración
+document.getElementById('resetSettings').addEventListener('click', () => {
+    if (confirm('¿Restaurar configuración predeterminada?')) {
+        designSettings = {...defaultSettings};
+        applyDesignSettings();
+        saveDesignSettings();
+        generateSchedule();
+        showNotification('✅ Configuración restaurada', 'success');
+    }
+});
+
+// Inicializar
+applyDesignSettings();
+updateTimeSlots();
+generateSchedule();

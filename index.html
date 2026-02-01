@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Horario</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <h1>📅 Mi Horario Semanal</h1>
+            <p class="subtitle">Organiza tu semana de forma profesional</p>
+        </header>
+        
+        <div class="main-grid">
+            <aside class="controls">
+                <h2 id="formTitle">➕ Nueva Clase</h2>
+                <form id="classForm">
+                    <input type="hidden" id="editingIndex" value="-1">
+                    <div class="form-group">
+                        <label for="className">📚 Materia/Grupo</label>
+                        <input type="text" id="className" placeholder="Ej: Matemáticas" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="color">🎨 Color</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="color" value="#4CAF50">
+                                <div class="color-presets">
+                                    <button type="button" class="color-preset" data-color="#4CAF50" style="background: #4CAF50"></button>
+                                    <button type="button" class="color-preset" data-color="#2196F3" style="background: #2196F3"></button>
+                                    <button type="button" class="color-preset" data-color="#FF9800" style="background: #FF9800"></button>
+                                    <button type="button" class="color-preset" data-color="#E91E63" style="background: #E91E63"></button>
+                                    <button type="button" class="color-preset" data-color="#9C27B0" style="background: #9C27B0"></button>
+                                    <button type="button" class="color-preset" data-color="#F44336" style="background: #F44336"></button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="room">🚪 Aula (opcional)</label>
+                            <input type="text" id="room" placeholder="Ej: 301">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startTime">⏰ Inicio</label>
+                            <input type="time" id="startTime" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="endTime">⏰ Fin</label>
+                            <input type="time" id="endTime" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📆 Días de la semana</label>
+                        <div class="days-selector">
+                            <label class="day-checkbox"><input type="checkbox" value="Lun"><span>L</span></label>
+                            <label class="day-checkbox"><input type="checkbox" value="Mar"><span>M</span></label>
+                            <label class="day-checkbox"><input type="checkbox" value="Mié"><span>X</span></label>
+                            <label class="day-checkbox"><input type="checkbox" value="Jue"><span>J</span></label>
+                            <label class="day-checkbox"><input type="checkbox" value="Vie"><span>V</span></label>
+                            <label class="day-checkbox"><input type="checkbox" value="Sáb"><span>S</span></label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-add" id="submitBtn">✨ Agregar Clase</button>
+                    <button type="button" class="btn-cancel" id="cancelBtn" style="display: none;">❌ Cancelar</button>
+                </form>
+                
+                <div class="classes-list">
+                    <h3>📋 Clases agregadas</h3>
+                    <div id="classList" class="list-container">
+                        <p class="empty-state">No hay clases aún</p>
+                    </div>
+                </div>
+            </aside>
+            
+            <main class="schedule-container">
+                <div class="schedule-controls">
+                    <div class="view-options">
+                        <span class="time-range-info" id="timeRangeInfo">📊 Vista automática</span>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="settingsBtn" class="btn-settings">⚙️ Diseño</button>
+                        <button id="exportJsonBtn" class="btn-export">📤 Exportar</button>
+                        <button id="importJsonBtn" class="btn-import">📥 Importar</button>
+                        <input type="file" id="importJsonFile" accept=".json" style="display: none;">
+                        <button id="downloadBtn" class="btn-download">📸 Imagen</button>
+                        <button id="printBtn" class="btn-print">🖨️ Imprimir</button>
+                        <button id="clearBtn" class="btn-clear">🗑️ Limpiar</button>
+                    </div>
+                </div>
+                
+                <!-- Panel de configuración -->
+                <div id="settingsPanel" class="settings-panel" style="display: none;">
+                    <h3>⚙️ Configuración de Diseño</h3>
+                    
+                    <div class="settings-section">
+                        <h4>📏 Tamaños</h4>
+                        <div class="settings-grid">
+                            <div class="setting-group">
+                                <label for="cellHeight">Altura de celdas (px)</label>
+                                <input type="range" id="cellHeight" min="30" max="100" value="40" step="5">
+                                <span id="cellHeightValue">40px</span>
+                            </div>
+                            <div class="setting-group">
+                                <label for="fontSize">Tamaño de fuente</label>
+                                <input type="range" id="fontSize" min="8" max="16" value="11" step="1">
+                                <span id="fontSizeValue">11px</span>
+                            </div>
+                            <div class="setting-group">
+                                <label for="cellPadding">Espaciado interno</label>
+                                <input type="range" id="cellPadding" min="1" max="8" value="2" step="1">
+                                <span id="cellPaddingValue">2px</span>
+                            </div>
+                            <div class="setting-group">
+                                <label for="headerSize">Tamaño encabezados</label>
+                                <input type="range" id="headerSize" min="10" max="18" value="13" step="1">
+                                <span id="headerSizeValue">13px</span>
+                            </div>
+                            <div class="setting-group">
+                                <label for="timeColumnWidth">Ancho columna hora</label>
+                                <input type="range" id="timeColumnWidth" min="60" max="120" value="80" step="5">
+                                <span id="timeColumnWidthValue">80px</span>
+                            </div>
+                            <div class="setting-group">
+                                <label for="borderRadius">Redondeo esquinas</label>
+                                <input type="range" id="borderRadius" min="0" max="12" value="6" step="1">
+                                <span id="borderRadiusValue">6px</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h4>🎨 Colores</h4>
+                        <div class="settings-grid">
+                            <div class="setting-group">
+                                <label for="headerColorStart">Encabezados (inicio)</label>
+                                <input type="color" id="headerColorStart" value="#667eea">
+                            </div>
+                            <div class="setting-group">
+                                <label for="headerColorEnd">Encabezados (fin)</label>
+                                <input type="color" id="headerColorEnd" value="#764ba2">
+                            </div>
+                            <div class="setting-group">
+                                <label for="timeColumnColorStart">Columna hora (inicio)</label>
+                                <input type="color" id="timeColumnColorStart" value="#f8f9fa">
+                            </div>
+                            <div class="setting-group">
+                                <label for="timeColumnColorEnd">Columna hora (fin)</label>
+                                <input type="color" id="timeColumnColorEnd" value="#e9ecef">
+                            </div>
+                            <div class="setting-group">
+                                <label for="cellBackgroundColor">Fondo de celdas</label>
+                                <input type="color" id="cellBackgroundColor" value="#ffffff">
+                            </div>
+                            <div class="setting-group">
+                                <label for="scheduleBgColor">Fondo de horario</label>
+                                <input type="color" id="scheduleBgColor" value="#f8f9fa">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-actions">
+                        <button id="resetSettings" class="btn-reset">↺ Restaurar</button>
+                        <button id="closeSettings" class="btn-close">Cerrar</button>
+                    </div>
+                </div>
+                
+                <div id="schedule" class="schedule">
+                    <!-- El horario se generará aquí -->
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <footer class="app-footer">
+        <p>Desarrollado con ♥️ por <strong>José Luciano Mejía Arias</strong></p>
+        <p class="footer-year">2026</p>
+    </footer>
+    
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
