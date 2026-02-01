@@ -363,6 +363,48 @@ body {
     border: 1px solid var(--apple-border);
 }
 
+.schedule-header-editable {
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    border-radius: 16px;
+    border: 2px dashed rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+}
+
+.schedule-header-editable:hover {
+    border-color: rgba(102, 126, 234, 0.6);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+}
+
+.schedule-title {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--apple-dark);
+    margin-bottom: 8px;
+    outline: none;
+    cursor: text;
+    transition: all 0.3s ease;
+    letter-spacing: -0.5px;
+}
+
+.schedule-title:focus {
+    color: var(--apple-blue);
+}
+
+.schedule-subtitle {
+    font-size: 1em;
+    color: var(--apple-gray);
+    outline: none;
+    cursor: text;
+    transition: all 0.3s ease;
+}
+
+.schedule-subtitle:focus {
+    color: var(--apple-blue);
+}
+
 .schedule-controls {
     display: flex;
     justify-content: space-between;
@@ -573,6 +615,14 @@ body {
     text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
+.class-block .class-teacher {
+    font-size: 8px;
+    opacity: 0.9;
+    margin-top: 1px;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
 .class-block .class-room {
     font-size: 8px;
     opacity: 0.9;
@@ -641,42 +691,125 @@ body {
     
     .controls {
         position: static;
+        max-width: 100%;
+    }
+    
+    .schedule-title {
+        font-size: 1.8em;
+    }
+    
+    .action-buttons {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 900px) {
+    body {
+        padding: 20px 10px;
+    }
+    
+    .main-header h1 {
+        font-size: 2.2em;
+    }
+    
+    .main-header .subtitle {
+        font-size: 1em;
+    }
+    
+    .controls {
+        padding: 20px;
+    }
+    
+    .schedule-container {
+        padding: 20px;
+    }
+    
+    .schedule-title {
+        font-size: 1.5em;
+    }
+    
+    .schedule-subtitle {
+        font-size: 0.9em;
+    }
+    
+    .days-selector {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
 @media (max-width: 768px) {
+    body {
+        padding: 15px 5px;
+    }
+    
+    .main-header {
+        padding: 20px 15px;
+        margin-bottom: 20px;
+    }
+    
+    .main-header h1 {
+        font-size: 1.8em;
+    }
+    
+    .main-header .subtitle {
+        font-size: 0.9em;
+    }
+    
+    .controls {
+        padding: 15px;
+    }
+    
+    .schedule-container {
+        padding: 15px;
+    }
+    
+    .schedule-title {
+        font-size: 1.3em;
+    }
+    
+    .schedule-subtitle {
+        font-size: 0.85em;
+    }
+    
     .schedule {
         font-size: 10px;
-        grid-template-columns: 70px repeat(auto-fit, minmax(50px, 60px));
+        grid-template-columns: 60px repeat(6, 1fr);
     }
     
     .schedule-cell {
-        min-height: 60px;
+        min-height: 50px;
         padding: 2px;
     }
     
     .schedule-header-cell {
-        font-size: 10px;
-        padding: 10px 4px;
+        font-size: 9px;
+        padding: 8px 2px;
     }
     
     .time-cell {
-        font-size: 11px;
-        padding: 8px 4px;
+        font-size: 9px;
+        padding: 6px 2px;
     }
     
     .class-block {
-        font-size: 9px;
-        padding: 4px 2px;
-        min-height: 50px;
+        font-size: 8px;
+        padding: 3px 2px;
     }
     
     .class-block .class-name {
-        font-size: 10px;
+        font-size: 9px;
     }
     
     .class-block .class-time {
-        font-size: 8px;
+        font-size: 7px;
+    }
+    
+    .class-block .class-teacher {
+        font-size: 7px;
+    }
+    
+    .class-block .class-room {
+        font-size: 6px;
     }
     
     .form-row {
@@ -685,6 +818,7 @@ body {
     
     .action-buttons {
         width: 100%;
+        flex-wrap: wrap;
     }
     
     .btn-download,
@@ -693,9 +827,73 @@ body {
     .btn-settings,
     .btn-export,
     .btn-import {
-        flex: 1;
+        flex: 1 1 45%;
         font-size: 11px;
-        padding: 8px 10px;
+        padding: 10px 8px;
+    }
+    
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-header h1 {
+        font-size: 1.5em;
+    }
+    
+    .schedule-title {
+        font-size: 1.1em;
+    }
+    
+    .schedule {
+        grid-template-columns: 50px repeat(6, 1fr);
+        font-size: 8px;
+    }
+    
+    .schedule-header-cell {
+        font-size: 8px;
+        padding: 6px 1px;
+    }
+    
+    .time-cell {
+        font-size: 8px;
+    }
+    
+    .class-block {
+        font-size: 7px;
+        padding: 2px 1px;
+    }
+    
+    .class-block .class-name {
+        font-size: 8px;
+    }
+    
+    .class-block .class-time,
+    .class-block .class-teacher,
+    .class-block .class-room {
+        font-size: 6px;
+    }
+    
+    .btn-download,
+    .btn-print,
+    .btn-clear,
+    .btn-settings,
+    .btn-export,
+    .btn-import {
+        flex: 1 1 100%;
+        font-size: 10px;
+        padding: 10px;
+    }
+    
+    .days-selector {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+    
+    .day-checkbox span {
+        padding: 10px;
+        font-size: 0.9em;
     }
 }
 

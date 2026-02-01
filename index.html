@@ -23,6 +23,11 @@
                         <input type="text" id="className" placeholder="Ej: Matemáticas" required>
                     </div>
                     
+                    <div class="form-group">
+                        <label for="teacher">👨‍🏫 Profesor (opcional)</label>
+                        <input type="text" id="teacher" placeholder="Ej: Dr. García">
+                    </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
                             <label for="color">🎨 Color</label>
@@ -82,6 +87,10 @@
             </aside>
             
             <main class="schedule-container">
+                <div class="schedule-header-editable" id="scheduleHeaderContainer">
+                    <h2 contenteditable="true" id="scheduleTitle" class="schedule-title" spellcheck="false">📅 Mi Horario Semanal</h2>
+                    <p class="schedule-subtitle" contenteditable="true" id="scheduleSubtitle" spellcheck="false">Haz clic para editar</p>
+                </div>
                 <div class="schedule-controls">
                     <div class="view-options">
                         <span class="time-range-info" id="timeRangeInfo">📊 Vista automática</span>

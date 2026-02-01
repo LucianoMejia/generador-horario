@@ -1,5 +1,7 @@
 // Datos del horario
 let scheduleData = JSON.parse(localStorage.getItem('scheduleData')) || [];
+let scheduleTitle = localStorage.getItem('scheduleTitle') || '📅 Mi Horario Semanal';
+let scheduleSubtitle = localStorage.getItem('scheduleSubtitle') || 'Haz clic para editar';
 
 // Configuración de horarios con intervalos de 30 minutos
 function generateTimeSlots(start, end) {
@@ -107,6 +109,7 @@ function editClass(index) {
     
     // Llenar el formulario
     document.getElementById('className').value = classItem.name;
+    document.getElementById('teacher').value = classItem.teacher || '';
     document.getElementById('color').value = classItem.color;
     document.getElementById('startTime').value = classItem.startTime;
     document.getElementById('endTime').value = classItem.endTime;
@@ -175,6 +178,9 @@ function renderClasses() {
                 const classBlock = document.createElement('div');
                 classBlock.className = 'class-block';
                 classBlock.style.backgroundColor = classItem.color;
+                classBlock.draggable = true;
+                classBlock.dataset.classIndex = index;
+                classBlock.dataset.originalDay = day;
                 
                 // Ajustar altura para que ocupe múltiples celdas si es necesario
                 if (cells.length > 1) {
@@ -200,6 +206,13 @@ function renderClasses() {
                 
                 classBlock.appendChild(className);
                 classBlock.appendChild(classTime);
+                
+                if (classItem.teacher) {
+                    const classTeacher = document.createElement('div');
+                    classTeacher.className = 'class-teacher';
+                    classTeacher.textContent = `👨‍🏫 ${classItem.teacher}`;
+                    classBlock.appendChild(classTeacher);
+                }
                 
                 if (classItem.room) {
                     const classRoom = document.createElement('div');
@@ -252,6 +265,7 @@ function updateClassList() {
                 <div class="class-item-name">${classItem.name}</div>
                 <div class="class-item-details">
                     ${classItem.startTime} - ${classItem.endTime} | ${classItem.days.join(', ')}
+                    ${classItem.teacher ? ` | 👨‍🏫 ${classItem.teacher}` : ''}
                     ${classItem.room ? ` | 📍 ${classItem.room}` : ''}
                 </div>
             </div>
@@ -265,6 +279,7 @@ document.getElementById('classForm').addEventListener('submit', (e) => {
     e.preventDefault();
     
     const name = document.getElementById('className').value.trim();
+    const teacher = document.getElementById('teacher').value.trim();
     const color = document.getElementById('color').value;
     const startTime = document.getElementById('startTime').value;
     const endTime = document.getElementById('endTime').value;
@@ -286,6 +301,7 @@ document.getElementById('classForm').addEventListener('submit', (e) => {
     
     const classData = {
         name,
+        teacher,
         color,
         startTime,
         endTime,
@@ -731,3 +747,232 @@ document.getElementById('resetSettings').addEventListener('click', () => {
 applyDesignSettings();
 updateTimeSlots();
 generateSchedule();
+
+// ===== DRAG AND DROP DE MATERIAS =====
+let draggedClassData = null;
+
+function enableDragAndDrop() {
+    const schedule = document.getElementById('schedule');
+    
+    schedule.addEventListener('dragstart', (e) => {
+        if (e.target.classList.contains('class-block')) {
+            draggedClassData = {
+                index: parseInt(e.target.dataset.classIndex),
+                originalDay: e.target.dataset.originalDay
+            };
+            e.target.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        }
+    });
+    
+    schedule.addEventListener('dragend', (e) => {
+        if (e.target.classList.contains('class-block')) {
+            e.target.style.opacity = '1';
+        }
+    });
+    
+    schedule.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    });
+    
+    schedule.addEventListener('drop', (e) => {
+        e.preventDefault();
+        
+        if (!draggedClassData) return;
+        
+        const targetCell = e.target.closest('.schedule-cell');
+        if (targetCell && targetCell.dataset.day && targetCell.dataset.time) {
+            const newDay = targetCell.dataset.day;
+            const classItem = scheduleData[draggedClassData.index];
+            
+            // Remover el día anterior y añadir el nuevo
+            const dayIndex = classItem.days.indexOf(draggedClassData.originalDay);
+            if (dayIndex !== -1 && !classItem.days.includes(newDay)) {
+                classItem.days[dayIndex] = newDay;
+                saveData();
+                generateSchedule();
+                showNotification('✅ Clase movida correctamente', 'success');
+            } else if (classItem.days.includes(newDay)) {
+                showNotification('⚠️ La clase ya existe en ese día', 'warning');
+            }
+        }
+        
+        draggedClassData = null;
+    });
+}
+
+// ===== TÍTULO EDITABLE =====
+function initEditableTitle() {
+    const titleEl = document.getElementById('scheduleTitle');
+    const subtitleEl = document.getElementById('scheduleSubtitle');
+    
+    if (titleEl) {
+        titleEl.textContent = scheduleTitle;
+        titleEl.addEventListener('blur', () => {
+            scheduleTitle = titleEl.textContent.trim() || '📅 Mi Horario Semanal';
+            localStorage.setItem('scheduleTitle', scheduleTitle);
+        });
+        
+        titleEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                titleEl.blur();
+            }
+        });
+    }
+    
+    if (subtitleEl) {
+        subtitleEl.textContent = scheduleSubtitle;
+        subtitleEl.addEventListener('blur', () => {
+            scheduleSubtitle = subtitleEl.textContent.trim() || 'Haz clic para editar';
+            localStorage.setItem('scheduleSubtitle', scheduleSubtitle);
+        });
+        
+        subtitleEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                subtitleEl.blur();
+            }
+        });
+    }
+}
+
+// ===== AÑADIR/QUITAR HORAS CON CURSOR =====
+let isResizing = false;
+let resizingBlock = null;
+let resizingDirection = null;
+let originalHeight = 0;
+let startY = 0;
+
+function enableClassResizing() {
+    const schedule = document.getElementById('schedule');
+    
+    schedule.addEventListener('mousedown', (e) => {
+        const classBlock = e.target.closest('.class-block');
+        if (!classBlock) return;
+        
+        const rect = classBlock.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        const edgeThreshold = 10;
+        
+        // Detectar si está cerca del borde superior o inferior
+        if (y < edgeThreshold) {
+            isResizing = true;
+            resizingDirection = 'top';
+            resizingBlock = classBlock;
+            originalHeight = rect.height;
+            startY = e.clientY;
+            classBlock.style.cursor = 'ns-resize';
+            e.preventDefault();
+        } else if (y > rect.height - edgeThreshold) {
+            isResizing = true;
+            resizingDirection = 'bottom';
+            resizingBlock = classBlock;
+            originalHeight = rect.height;
+            startY = e.clientY;
+            classBlock.style.cursor = 'ns-resize';
+            e.preventDefault();
+        }
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) {
+            // Cambiar cursor al pasar sobre bordes
+            const classBlock = e.target.closest('.class-block');
+            if (classBlock) {
+                const rect = classBlock.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                const edgeThreshold = 10;
+                
+                if (y < edgeThreshold || y > rect.height - edgeThreshold) {
+                    classBlock.style.cursor = 'ns-resize';
+                } else {
+                    classBlock.style.cursor = 'pointer';
+                }
+            }
+            return;
+        }
+        
+        e.preventDefault();
+        const deltaY = e.clientY - startY;
+        const cellHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-height') || '40');
+        const slots = Math.round(Math.abs(deltaY) / cellHeight);
+        
+        if (slots > 0) {
+            const classIndex = parseInt(resizingBlock.dataset.classIndex);
+            const classItem = scheduleData[classIndex];
+            const [startHour, startMin] = classItem.startTime.split(':').map(Number);
+            const [endHour, endMin] = classItem.endTime.split(':').map(Number);
+            
+            if (resizingDirection === 'bottom' && deltaY > 0) {
+                // Extender hacia abajo
+                const newEndMin = endMin + (slots * 30);
+                const newEndHour = endHour + Math.floor(newEndMin / 60);
+                const finalEndMin = newEndMin % 60;
+                
+                if (newEndHour < 24) {
+                    classItem.endTime = `${newEndHour.toString().padStart(2, '0')}:${finalEndMin.toString().padStart(2, '0')}`;
+                }
+            } else if (resizingDirection === 'bottom' && deltaY < 0) {
+                // Reducir desde abajo
+                const newEndMin = endMin - (slots * 30);
+                const newEndHour = endHour + Math.floor(newEndMin / 60);
+                const finalEndMin = ((newEndMin % 60) + 60) % 60;
+                
+                const newEndTotal = (newEndHour * 60) + finalEndMin;
+                const startTotal = (startHour * 60) + startMin;
+                
+                if (newEndTotal > startTotal + 30) {
+                    classItem.endTime = `${newEndHour.toString().padStart(2, '0')}:${finalEndMin.toString().padStart(2, '0')}`;
+                }
+            } else if (resizingDirection === 'top' && deltaY < 0) {
+                // Extender hacia arriba
+                const newStartMin = startMin - (slots * 30);
+                const newStartHour = startHour + Math.floor(newStartMin / 60);
+                const finalStartMin = ((newStartMin % 60) + 60) % 60;
+                
+                if (newStartHour >= 0) {
+                    classItem.startTime = `${newStartHour.toString().padStart(2, '0')}:${finalStartMin.toString().padStart(2, '0')}`;
+                }
+            } else if (resizingDirection === 'top' && deltaY > 0) {
+                // Reducir desde arriba
+                const newStartMin = startMin + (slots * 30);
+                const newStartHour = startHour + Math.floor(newStartMin / 60);
+                const finalStartMin = newStartMin % 60;
+                
+                const newStartTotal = (newStartHour * 60) + finalStartMin;
+                const endTotal = (endHour * 60) + endMin;
+                
+                if (newStartTotal < endTotal - 30) {
+                    classItem.startTime = `${newStartHour.toString().padStart(2, '0')}:${finalStartMin.toString().padStart(2, '0')}`;
+                }
+            }
+            
+            saveData();
+            updateTimeSlots();
+            generateSchedule();
+            
+            // Actualizar referencias
+            const newBlock = document.querySelector(`[data-class-index="${classIndex}"]`);
+            if (newBlock) {
+                resizingBlock = newBlock;
+                startY = e.clientY;
+            }
+        }
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            resizingBlock = null;
+            resizingDirection = null;
+            showNotification('✅ Horario actualizado', 'success');
+        }
+    });
+}
+
+// Inicializar funcionalidades adicionales
+enableDragAndDrop();
+initEditableTitle();
+enableClassResizing();
