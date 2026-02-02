@@ -11,6 +11,14 @@
         <header class="main-header">
             <h1>📅 Mi Horario Semanal</h1>
             <p class="subtitle">Organiza tu semana de forma profesional</p>
+            <div class="action-buttons-header">
+                <button id="settingsBtn" class="btn-settings">⚙️ Diseño</button>
+                <button id="exportJsonBtn" class="btn-export">📄 Exportar</button>
+                <button id="importJsonBtn" class="btn-import">📅 Importar</button>
+                <input type="file" id="importJsonFile" accept=".json" style="display: none;">
+                <button id="downloadBtn" class="btn-download">⬇️ Descargar</button>
+                <button id="clearBtn" class="btn-clear">🗑️ Limpiar</button>
+            </div>
         </header>
         
         <div class="main-grid">
@@ -91,23 +99,11 @@
                     <h2 contenteditable="true" id="scheduleTitle" class="schedule-title" spellcheck="false">📅 Mi Horario Semanal</h2>
                     <p class="schedule-subtitle" contenteditable="true" id="scheduleSubtitle" spellcheck="false">Haz clic para editar</p>
                 </div>
-                <div class="schedule-controls">
-                    <div class="view-options">
-                        <span class="time-range-info" id="timeRangeInfo">📊 Vista automática</span>
-                    </div>
-                    <div class="action-buttons">
-                        <button id="settingsBtn" class="btn-settings">⚙️ Diseño</button>
-                        <button id="exportJsonBtn" class="btn-export">📤 Exportar</button>
-                        <button id="importJsonBtn" class="btn-import">📥 Importar</button>
-                        <input type="file" id="importJsonFile" accept=".json" style="display: none;">
-                        <button id="downloadBtn" class="btn-download">⬇️ Descargar</button>
-                        <button id="clearBtn" class="btn-clear">🗑️ Limpiar</button>
-                    </div>
-                </div>
                 
                 <!-- Panel de configuración -->
-                <div id="settingsPanel" class="settings-panel" style="display: none;">
-                    <h3>⚙️ Configuración de Diseño</h3>
+                <div id="settingsPanel" class="settings-panel-modal">
+                    <div class="settings-content">
+                        <h3>⚙️ Configuración de Diseño</h3>
                     
                     <div class="settings-section">
                         <h4>📏 Tamaños</h4>
@@ -149,6 +145,28 @@
                         <h4>🎨 Colores</h4>
                         <div class="settings-grid">
                             <div class="setting-group">
+                                <label for="titleColor">Color del título</label>
+                                <input type="color" id="titleColor" value="#1C1C1E">
+                            </div>
+                            <div class="setting-group">
+                                <label for="subtitleColor">Color del subtítulo</label>
+                                <input type="color" id="subtitleColor" value="#8E8E93">
+                            </div>
+                            <div class="setting-group">
+                                <label for="titleShadowColor">Color sombra título</label>
+                                <input type="color" id="titleShadowColor" value="#000000">
+                            </div>
+                            <div class="setting-group">
+                                <label for="titleShadowBlur">Desenfoque sombra</label>
+                                <input type="range" id="titleShadowBlur" min="0" max="20" value="4" step="1">
+                                <span id="titleShadowBlurValue">4px</span>
+                            </div>
+                            <div class="setting-group">
+                                <label for="titleShadowOpacity">Opacidad sombra</label>
+                                <input type="range" id="titleShadowOpacity" min="0" max="100" value="15" step="5">
+                                <span id="titleShadowOpacityValue">15%</span>
+                            </div>
+                            <div class="setting-group">
                                 <label for="headerColorStart">Encabezados (inicio)</label>
                                 <input type="color" id="headerColorStart" value="#667eea">
                             </div>
@@ -174,10 +192,96 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="settings-section">
+                        <h4>🖼️ Fondo de Imagen</h4>
+                        <div class="settings-grid">
+                            <div class="setting-group full-width">
+                                <label for="backgroundImageInput">Seleccionar imagen</label>
+                                <input type="file" id="backgroundImageInput" accept="image/*">
+                                <p class="setting-help">Carga una imagen para el fondo del horario</p>
+                            </div>
+                            <div class="setting-group">
+                                <label for="bgOpacity">Opacidad de fondo</label>
+                                <input type="range" id="bgOpacity" min="0" max="100" value="100" step="5">
+                                <span id="bgOpacityValue">100%</span>
+                            </div>
+                            <div class="setting-group">
+                                <label for="bgBlur">Desenfoque de fondo</label>
+                                <input type="range" id="bgBlur" min="0" max="20" value="0" step="1">
+                                <span id="bgBlurValue">0px</span>
+                            </div>
+                            <div class="setting-group">
+                                <label for="bgPosition">Posición de imagen</label>
+                                <select id="bgPosition">
+                                    <option value="center">Centro</option>
+                                    <option value="top">Superior</option>
+                                    <option value="bottom">Inferior</option>
+                                    <option value="left">Izquierda</option>
+                                    <option value="right">Derecha</option>
+                                    <option value="top left">Superior Izquierda</option>
+                                    <option value="top right">Superior Derecha</option>
+                                    <option value="bottom left">Inferior Izquierda</option>
+                                    <option value="bottom right">Inferior Derecha</option>
+                                </select>
+                            </div>
+                            <div class="setting-group">
+                                <label for="bgSize">Tamaño de imagen</label>
+                                <select id="bgSize">
+                                    <option value="cover">Cubrir</option>
+                                    <option value="contain">Contener</option>
+                                    <option value="100% 100%">Estirar</option>
+                                </select>
+                            </div>
+                            <div class="setting-group">
+                                <label for="bgRepeat">Repetir imagen</label>
+                                <select id="bgRepeat">
+                                    <option value="no-repeat">No repetir</option>
+                                    <option value="repeat">Repetir</option>
+                                    <option value="repeat-x">Repetir X</option>
+                                    <option value="repeat-y">Repetir Y</option>
+                                </select>
+                            </div>
+                            <div class="setting-group">
+                                <button type="button" id="removeBackgroundBtn" class="btn-danger">🗑️ Remover imagen</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h4>✨ Efectos Visuales</h4>
+                        <div class="settings-grid">
+                            <div class="setting-group">
+                                <label for="textShadow">Sombra de texto</label>
+                                <input type="checkbox" id="textShadow" class="toggle-checkbox">
+                            </div>
+                            <div class="setting-group">
+                                <label for="cellShadow">Sombra de celdas</label>
+                                <input type="checkbox" id="cellShadow" class="toggle-checkbox">
+                            </div>
+                            <div class="setting-group">
+                                <label for="glassMorphism">Efecto cristal</label>
+                                <input type="checkbox" id="glassMorphism" class="toggle-checkbox" checked>
+                            </div>
+                            <div class="setting-group">
+                                <label for="boldText">Texto en negrita</label>
+                                <input type="checkbox" id="boldText" class="toggle-checkbox">
+                            </div>
+                            <div class="setting-group">
+                                <label for="cellBorder">Bordes de celdas</label>
+                                <input type="checkbox" id="cellBorder" class="toggle-checkbox" checked>
+                            </div>
+                            <div class="setting-group">
+                                <label for="animationEnabled">Animaciones</label>
+                                <input type="checkbox" id="animationEnabled" class="toggle-checkbox" checked>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="settings-actions">
                         <button id="resetSettings" class="btn-reset">↺ Restaurar</button>
                         <button id="closeSettings" class="btn-close">Cerrar</button>
+                    </div>
                     </div>
                 </div>
                 

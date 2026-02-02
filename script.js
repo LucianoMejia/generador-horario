@@ -366,22 +366,38 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
     try {
         showNotification('⬇️ Generando descarga...', 'info');
         
-        // Crear contenedor para capturar ambos elementos
+        // Crear contenedor temporal con solo el horario (sin controles)
+        const scheduleContainer = document.querySelector('.schedule-container');
         const captureContainer = document.createElement('div');
-        captureContainer.style.backgroundColor = '#ffffff';
         captureContainer.style.padding = '20px';
-        captureContainer.style.width = '100%';
-        captureContainer.style.fontFamily = getComputedStyle(document.body).fontFamily;
+        captureContainer.style.position = 'absolute';
+        captureContainer.style.left = '-10000px';
+        captureContainer.style.top = '0';
+        captureContainer.style.width = scheduleContainer.offsetWidth + 'px';
         
-        // Clonar encabezado
-        const headerElement = document.getElementById('scheduleHeaderContainer');
-        const headerClone = headerElement.cloneNode(true);
-        captureContainer.appendChild(headerClone);
+        // Aplicar imagen de fondo si existe
+        if (bgImageSettings.backgroundImage) {
+            captureContainer.style.backgroundImage = `url('${bgImageSettings.backgroundImage}')`;
+            captureContainer.style.backgroundPosition = bgImageSettings.bgPosition || 'center';
+            captureContainer.style.backgroundSize = bgImageSettings.bgSize || 'cover';
+            captureContainer.style.backgroundRepeat = bgImageSettings.bgRepeat || 'no-repeat';
+        } else {
+            captureContainer.style.backgroundColor = 'white';
+        }
         
-        // Clonar horario
-        const scheduleElement = document.getElementById('schedule');
-        const scheduleClone = scheduleElement.cloneNode(true);
-        captureContainer.appendChild(scheduleClone);
+        // Clonar el encabezado (título y subtítulo)
+        const headerEl = document.getElementById('scheduleHeaderContainer');
+        if (headerEl) {
+            const headerClone = headerEl.cloneNode(true);
+            captureContainer.appendChild(headerClone);
+        }
+        
+        // Clonar solo la tabla del horario (sin los controles)
+        const scheduleEl = document.getElementById('schedule');
+        if (scheduleEl) {
+            const scheduleClone = scheduleEl.cloneNode(true);
+            captureContainer.appendChild(scheduleClone);
+        }
         
         // Obtener variables CSS actuales
         const root = document.documentElement;
@@ -396,7 +412,7 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
             }
         }
         
-        // Crear un estilo temporal con todas las variables CSS y reglas importantes
+        // Crear un estilo temporal
         const styleSheet = document.createElement('style');
         styleSheet.textContent = `
             :root { ${cssVars} }
@@ -407,9 +423,9 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
                 border: 1px solid rgba(255, 255, 255, 0.25) !important;
             }
-            .schedule {
-                background: white !important;
-                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+            #schedule {
+                background: rgba(255, 255, 255, 0.95) !important;
+                margin-top: 20px !important;
             }
             .schedule-cell {
                 background: white !important;
@@ -421,38 +437,44 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
             .time-cell {
                 background: rgba(245, 245, 247, 0.6) !important;
             }
+            .schedule-title {
+                color: ${designSettings.titleColor || '#1C1C1E'} !important;
+                margin: 0 !important;
+            }
+            .schedule-subtitle {
+                color: ${designSettings.subtitleColor || '#8E8E93'} !important;
+                margin: 0 !important;
+            }
         `;
         document.head.appendChild(styleSheet);
         
-        // Agregar al DOM temporalmente
-        captureContainer.style.position = 'absolute';
-        captureContainer.style.left = '-10000px';
-        captureContainer.style.top = '0';
+        // Agregar al DOM
         document.body.appendChild(captureContainer);
         
         // Esperar a que se renderice
-        await new Promise(r => setTimeout(r, 250));
+        await new Promise(r => setTimeout(r, 500));
         
-        // Capturar con html2canvas con escala 1.5 para mejor calidad de color
-        const canvas = await html2canvas(captureContainer, {
-            backgroundColor: '#ffffff',
-            scale: 1.5,
+        // Capturar con html2canvas
+        const contentCanvas = await html2canvas(captureContainer, {
+            backgroundColor: null,
+            scale: 2,
             logging: false,
             useCORS: true,
             allowTaint: true,
-            backgroundColor: '#ffffff',
-            imageTimeout: 0
+            imageTimeout: 0,
+            windowWidth: captureContainer.scrollWidth,
+            windowHeight: captureContainer.scrollHeight
         });
         
         // Remover elementos temporales
         document.body.removeChild(captureContainer);
         document.head.removeChild(styleSheet);
         
-        // Descargar imagen
+        // Descargar directamente
         const link = document.createElement('a');
         const fileName = scheduleTitle.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase();
         link.download = `${fileName || 'horario'}-${new Date().toISOString().split('T')[0]}.png`;
-        link.href = canvas.toDataURL('image/png');
+        link.href = contentCanvas.toDataURL('image/png');
         link.click();
         
         showNotification('✅ Horario descargado correctamente', 'success');
@@ -650,6 +672,11 @@ const defaultSettings = {
     headerSize: 13,
     timeColumnWidth: 80,
     borderRadius: 6,
+    titleColor: '#1C1C1E',
+    subtitleColor: '#8E8E93',
+    titleShadowColor: '#000000',
+    titleShadowBlur: 4,
+    titleShadowOpacity: 15,
     headerColorStart: '#667eea',
     headerColorEnd: '#764ba2',
     timeColumnColorStart: '#f8f9fa',
@@ -677,6 +704,25 @@ function applyDesignSettings() {
     root.style.setProperty('--cell-bg-color', designSettings.cellBackgroundColor);
     root.style.setProperty('--schedule-bg-color', designSettings.scheduleBgColor);
     
+    // Aplicar colores al título y subtítulo
+    const titleEl = document.getElementById('scheduleTitle');
+    const subtitleEl = document.getElementById('scheduleSubtitle');
+    if (titleEl) {
+        titleEl.style.color = designSettings.titleColor;
+        // Aplicar sombra al título
+        const hexToRgba = (hex, alpha) => {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
+        const shadowColor = designSettings.titleShadowColor || '#000000';
+        const shadowBlur = designSettings.titleShadowBlur || 4;
+        const shadowOpacity = (designSettings.titleShadowOpacity || 15) / 100;
+        titleEl.style.textShadow = `0 2px ${shadowBlur}px ${hexToRgba(shadowColor, shadowOpacity)}`;
+    }
+    if (subtitleEl) subtitleEl.style.color = designSettings.subtitleColor;
+    
     // Actualizar valores mostrados
     document.getElementById('cellHeightValue').textContent = `${designSettings.cellHeight}px`;
     document.getElementById('fontSizeValue').textContent = `${designSettings.fontSize}px`;
@@ -694,6 +740,18 @@ function applyDesignSettings() {
     document.getElementById('borderRadius').value = designSettings.borderRadius;
     
     // Actualizar selectores de color
+    document.getElementById('titleColor').value = designSettings.titleColor || '#1C1C1E';
+    document.getElementById('subtitleColor').value = designSettings.subtitleColor || '#8E8E93';
+    document.getElementById('titleShadowColor').value = designSettings.titleShadowColor || '#000000';
+    document.getElementById('titleShadowBlur').value = designSettings.titleShadowBlur || 4;
+    document.getElementById('titleShadowBlurValue').textContent = (designSettings.titleShadowBlur || 4) + 'px';
+    document.getElementById('titleShadowOpacity').value = designSettings.titleShadowOpacity || 15;
+    document.getElementById('titleShadowOpacityValue').textContent = (designSettings.titleShadowOpacity || 15) + '%';
+    document.getElementById('titleShadowColor').value = designSettings.titleShadowColor || '#000000';
+    document.getElementById('titleShadowBlur').value = designSettings.titleShadowBlur || 4;
+    document.getElementById('titleShadowBlurValue').textContent = (designSettings.titleShadowBlur || 4) + 'px';
+    document.getElementById('titleShadowOpacity').value = designSettings.titleShadowOpacity || 15;
+    document.getElementById('titleShadowOpacityValue').textContent = (designSettings.titleShadowOpacity || 15) + '%';
     document.getElementById('headerColorStart').value = designSettings.headerColorStart;
     document.getElementById('headerColorEnd').value = designSettings.headerColorEnd;
     document.getElementById('timeColumnColorStart').value = designSettings.timeColumnColorStart;
@@ -753,6 +811,38 @@ document.getElementById('borderRadius').addEventListener('input', (e) => {
 });
 
 // Event listeners para selectores de color
+document.getElementById('titleColor').addEventListener('input', (e) => {
+    designSettings.titleColor = e.target.value;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+document.getElementById('subtitleColor').addEventListener('input', (e) => {
+    designSettings.subtitleColor = e.target.value;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+document.getElementById('titleShadowColor').addEventListener('input', (e) => {
+    designSettings.titleShadowColor = e.target.value;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+document.getElementById('titleShadowBlur').addEventListener('input', (e) => {
+    designSettings.titleShadowBlur = parseInt(e.target.value);
+    document.getElementById('titleShadowBlurValue').textContent = e.target.value + 'px';
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
+document.getElementById('titleShadowOpacity').addEventListener('input', (e) => {
+    designSettings.titleShadowOpacity = parseInt(e.target.value);
+    document.getElementById('titleShadowOpacityValue').textContent = e.target.value + '%';
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
 document.getElementById('headerColorStart').addEventListener('input', (e) => {
     designSettings.headerColorStart = e.target.value;
     applyDesignSettings();
@@ -792,29 +882,95 @@ document.getElementById('scheduleBgColor').addEventListener('input', (e) => {
 // Botón de configuración
 document.getElementById('settingsBtn').addEventListener('click', () => {
     const panel = document.getElementById('settingsPanel');
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    const mainGrid = document.querySelector('.main-grid');
+    panel.classList.toggle('visible');
+    mainGrid.classList.toggle('settings-open');
 });
 
 // Botón cerrar configuración
 document.getElementById('closeSettings').addEventListener('click', () => {
-    document.getElementById('settingsPanel').style.display = 'none';
+    const panel = document.getElementById('settingsPanel');
+    const mainGrid = document.querySelector('.main-grid');
+    panel.classList.remove('visible');
+    mainGrid.classList.remove('settings-open');
 });
 
-// Botón restaurar configuración
-document.getElementById('resetSettings').addEventListener('click', () => {
-    if (confirm('¿Restaurar configuración predeterminada?')) {
-        designSettings = {...defaultSettings};
-        applyDesignSettings();
-        saveDesignSettings();
-        generateSchedule();
-        showNotification('✅ Configuración restaurada', 'success');
+// Función para esperar a que el DOM esté listo
+function initializeBackgroundSettings() {
+    // Inicializar valores de background si existen
+    if (bgImageSettings.bgOpacity) {
+        const opacityEl = document.getElementById('bgOpacity');
+        const opacityValueEl = document.getElementById('bgOpacityValue');
+        if (opacityEl) {
+            opacityEl.value = bgImageSettings.bgOpacity;
+            opacityValueEl.textContent = `${bgImageSettings.bgOpacity}%`;
+        }
+    }
+    
+    if (bgImageSettings.bgBlur) {
+        const blurEl = document.getElementById('bgBlur');
+        const blurValueEl = document.getElementById('bgBlurValue');
+        if (blurEl) {
+            blurEl.value = bgImageSettings.bgBlur;
+            blurValueEl.textContent = `${bgImageSettings.bgBlur}px`;
+        }
+    }
+    
+    // Inicializar checkboxes
+    document.getElementById('textShadow').checked = bgImageSettings.textShadow;
+    document.getElementById('cellShadow').checked = bgImageSettings.cellShadow;
+    document.getElementById('glassMorphism').checked = bgImageSettings.glassMorphism;
+    document.getElementById('boldText').checked = bgImageSettings.boldText;
+    document.getElementById('cellBorder').checked = bgImageSettings.cellBorder;
+    document.getElementById('animationEnabled').checked = bgImageSettings.animationEnabled;
+    
+    // Inicializar selectores
+    if (document.getElementById('bgPosition')) {
+        document.getElementById('bgPosition').value = bgImageSettings.bgPosition;
+        document.getElementById('bgSize').value = bgImageSettings.bgSize;
+        document.getElementById('bgRepeat').value = bgImageSettings.bgRepeat;
+    }
+}
+
+// Event listeners para resetSettings y closeSettings
+document.addEventListener('DOMContentLoaded', () => {
+    const resetBtn = document.getElementById('resetSettings');
+    const closeBtn = document.getElementById('closeSettings');
+    
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            if (confirm('¿Deseas restaurar la configuración predeterminada?')) {
+                designSettings = {...defaultSettings};
+                Object.assign(bgImageSettings, {
+                    bgOpacity: 100,
+                    bgBlur: 0,
+                    textShadow: false,
+                    cellShadow: false,
+                    glassMorphism: true,
+                    boldText: false,
+                    cellBorder: true,
+                    animationEnabled: true
+                });
+                bgImageSettings.backgroundImage = null;
+                document.getElementById('backgroundImageInput').value = '';
+                
+                applyDesignSettings();
+                applyBackgroundImage();
+                saveDesignSettings();
+                saveBgSettings();
+                
+                document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+                showNotification('✅ Configuración restaurada', 'success');
+            }
+        });
+    }
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            document.getElementById('settingsPanel').style.display = 'none';
+        });
     }
 });
-
-// Inicializar
-applyDesignSettings();
-updateTimeSlots();
-generateSchedule();
 
 // ===== DRAG AND DROP DE MATERIAS =====
 let draggedClassData = null;
@@ -1040,7 +1196,275 @@ function enableClassResizing() {
     });
 }
 
+// ===== FUNCIONES DE FONDO DE IMAGEN =====
+
+// Extensión de configuración de diseño
+const bgImageSettings = {
+    backgroundImage: null,
+    bgOpacity: 100,
+    bgBlur: 0,
+    bgPosition: 'center',
+    bgSize: 'cover',
+    bgRepeat: 'no-repeat',
+    textShadow: false,
+    cellShadow: false,
+    glassMorphism: true,
+    boldText: false,
+    cellBorder: true,
+    animationEnabled: true
+};
+
+// Cargar configuración de fondo
+const savedBgSettings = localStorage.getItem('bgImageSettings');
+if (savedBgSettings) {
+    Object.assign(bgImageSettings, JSON.parse(savedBgSettings));
+}
+
+// Aplicar configuración de fondo
+function applyBackgroundImage() {
+    const scheduleContainer = document.querySelector('.schedule-container');
+    const schedule = document.getElementById('schedule');
+    
+    if (!scheduleContainer) return;
+    
+    if (bgImageSettings.backgroundImage) {
+        // Aplicar fondo al contenedor principal
+        const opacity = bgImageSettings.bgOpacity / 100;
+        const blur = bgImageSettings.bgBlur;
+        
+        // Usar un pseudo-elemento para el overlay
+        let style = document.getElementById('bgOverlayStyle');
+        if (!style) {
+            style = document.createElement('style');
+            style.id = 'bgOverlayStyle';
+            document.head.appendChild(style);
+        }
+        
+        style.textContent = `
+            .schedule-container {
+                position: relative;
+                background-image: url('${bgImageSettings.backgroundImage}');
+                background-position: ${bgImageSettings.bgPosition};
+                background-size: ${bgImageSettings.bgSize};
+                background-repeat: ${bgImageSettings.bgRepeat};
+                background-attachment: fixed;
+            }
+            
+            .schedule-container::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-image: url('${bgImageSettings.backgroundImage}');
+                background-position: ${bgImageSettings.bgPosition};
+                background-size: ${bgImageSettings.bgSize};
+                background-repeat: ${bgImageSettings.bgRepeat};
+                background-attachment: fixed;
+                opacity: ${opacity};
+                filter: blur(${blur}px);
+                pointer-events: none;
+                z-index: 0;
+            }
+            
+            .schedule-container > * {
+                position: relative;
+                z-index: 1;
+            }
+        `;
+        
+        scheduleContainer.style.position = 'relative';
+    } else {
+        // Limpiar estilos si no hay imagen
+        scheduleContainer.style.backgroundImage = 'none';
+        scheduleContainer.style.position = '';
+        const style = document.getElementById('bgOverlayStyle');
+        if (style) style.remove();
+    }
+    
+    applyVisualEffects();
+}
+
+// Aplicar efectos visuales
+function applyVisualEffects() {
+    const schedule = document.getElementById('schedule');
+    const cells = document.querySelectorAll('.schedule-cell');
+    
+    // Sombra de texto
+    cells.forEach(cell => {
+        if (bgImageSettings.textShadow) {
+            cell.style.textShadow = '0 1px 3px rgba(0,0,0,0.3)';
+        } else {
+            cell.style.textShadow = 'none';
+        }
+        
+        // Texto en negrita
+        if (bgImageSettings.boldText) {
+            cell.style.fontWeight = '600';
+        } else {
+            cell.style.fontWeight = 'normal';
+        }
+    });
+    
+    // Sombra de celdas
+    const scheduleClassBlocks = document.querySelectorAll('.class-block');
+    scheduleClassBlocks.forEach(block => {
+        if (bgImageSettings.cellShadow) {
+            block.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+        } else {
+            block.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+        }
+    });
+    
+    // Bordes de celdas
+    if (bgImageSettings.cellBorder) {
+        document.documentElement.style.setProperty('--apple-border', 'rgba(0, 0, 0, 0.06)');
+    } else {
+        document.documentElement.style.setProperty('--apple-border', 'transparent');
+    }
+    
+    // Glassmorphism
+    const controls = document.querySelector('.controls');
+    const header = document.querySelector('.main-header');
+    if (controls && header) {
+        if (bgImageSettings.glassMorphism) {
+            controls.style.backdropFilter = 'blur(30px) saturate(180%)';
+            controls.style.webkitBackdropFilter = 'blur(30px) saturate(180%)';
+            header.style.backdropFilter = 'blur(30px) saturate(180%)';
+            header.style.webkitBackdropFilter = 'blur(30px) saturate(180%)';
+        } else {
+            controls.style.backdropFilter = 'none';
+            controls.style.webkitBackdropFilter = 'none';
+            header.style.backdropFilter = 'none';
+            header.style.webkitBackdropFilter = 'none';
+        }
+    }
+    
+    // Animaciones
+    if (!bgImageSettings.animationEnabled) {
+        document.documentElement.style.setProperty('--animation-duration', '0s');
+    } else {
+        document.documentElement.style.setProperty('--animation-duration', '0.3s');
+    }
+}
+
+// Manejo de carga de imagen
+document.getElementById('backgroundImageInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            bgImageSettings.backgroundImage = event.target.result;
+            saveBgSettings();
+            applyBackgroundImage();
+            showNotification('✅ Fondo cargado exitosamente', 'success');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Controles de opacidad y blur
+document.getElementById('bgOpacity').addEventListener('input', (e) => {
+    bgImageSettings.bgOpacity = parseInt(e.target.value);
+    document.getElementById('bgOpacityValue').textContent = `${e.target.value}%`;
+    applyBackgroundImage();
+    saveBgSettings();
+});
+
+document.getElementById('bgBlur').addEventListener('input', (e) => {
+    bgImageSettings.bgBlur = parseInt(e.target.value);
+    document.getElementById('bgBlurValue').textContent = `${e.target.value}px`;
+    applyBackgroundImage();
+    saveBgSettings();
+});
+
+// Selectores de posición y tamaño
+document.getElementById('bgPosition').addEventListener('change', (e) => {
+    bgImageSettings.bgPosition = e.target.value;
+    applyBackgroundImage();
+    saveBgSettings();
+});
+
+document.getElementById('bgSize').addEventListener('change', (e) => {
+    bgImageSettings.bgSize = e.target.value;
+    applyBackgroundImage();
+    saveBgSettings();
+});
+
+document.getElementById('bgRepeat').addEventListener('change', (e) => {
+    bgImageSettings.bgRepeat = e.target.value;
+    applyBackgroundImage();
+    saveBgSettings();
+});
+
+// Botón para remover fondo
+document.getElementById('removeBackgroundBtn').addEventListener('click', () => {
+    bgImageSettings.backgroundImage = null;
+    document.getElementById('backgroundImageInput').value = '';
+    applyBackgroundImage();
+    saveBgSettings();
+    showNotification('✅ Fondo removido', 'success');
+});
+
+// Efectos visuales
+document.getElementById('textShadow').addEventListener('change', (e) => {
+    bgImageSettings.textShadow = e.target.checked;
+    applyVisualEffects();
+    saveBgSettings();
+});
+
+document.getElementById('cellShadow').addEventListener('change', (e) => {
+    bgImageSettings.cellShadow = e.target.checked;
+    applyVisualEffects();
+    saveBgSettings();
+});
+
+document.getElementById('glassMorphism').addEventListener('change', (e) => {
+    bgImageSettings.glassMorphism = e.target.checked;
+    applyVisualEffects();
+    saveBgSettings();
+});
+
+document.getElementById('boldText').addEventListener('change', (e) => {
+    bgImageSettings.boldText = e.target.checked;
+    applyVisualEffects();
+    saveBgSettings();
+});
+
+document.getElementById('cellBorder').addEventListener('change', (e) => {
+    bgImageSettings.cellBorder = e.target.checked;
+    applyVisualEffects();
+    saveBgSettings();
+});
+
+document.getElementById('animationEnabled').addEventListener('change', (e) => {
+    bgImageSettings.animationEnabled = e.target.checked;
+    applyVisualEffects();
+    saveBgSettings();
+});
+
+// Guardar configuración de fondo
+function saveBgSettings() {
+    localStorage.setItem('bgImageSettings', JSON.stringify(bgImageSettings));
+}
+
 // Inicializar funcionalidades adicionales
 enableDragAndDrop();
 initEditableTitle();
 enableClassResizing();
+applyBackgroundImage();
+applyDesignSettings();
+updateTimeSlots();
+generateSchedule();
+
+// Inicializar valores de background cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeBackgroundSettings();
+    });
+} else {
+    initializeBackgroundSettings();
+}
+
+
