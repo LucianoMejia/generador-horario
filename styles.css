@@ -687,10 +687,12 @@ body {
 
 @media (max-width: 1200px) {
     .main-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 300px 1fr 300px;
+        gap: 15px;
     }
     
-    .controls {
+    .controls,
+    .settings-panel {
         position: static;
         max-width: 100%;
     }
@@ -705,6 +707,10 @@ body {
 }
 
 @media (max-width: 900px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+
     body {
         padding: 20px 10px;
     }
@@ -717,7 +723,8 @@ body {
         font-size: 1em;
     }
     
-    .controls {
+    .controls,
+    .settings-panel {
         padding: 20px;
     }
     
