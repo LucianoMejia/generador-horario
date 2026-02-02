@@ -83,7 +83,7 @@ body {
 
 .main-grid {
     display: grid;
-    grid-template-columns: 350px 1fr;
+    grid-template-columns: 350px 1fr 350px;
     gap: 25px;
     align-items: start;
 }
@@ -537,7 +537,7 @@ body {
 }
 
 .schedule-cell {
-    background: white;
+    background: var(--cell-bg-color);
     padding: var(--cell-padding);
     min-height: var(--cell-height);
     display: flex;
@@ -549,7 +549,7 @@ body {
 }
 
 .schedule-header-cell {
-    background: rgba(245, 245, 247, 0.8);
+    background: linear-gradient(135deg, var(--header-color-start) 0%, var(--header-color-end) 100%);
     color: var(--apple-dark);
     font-weight: 700;
     font-size: var(--header-size);
@@ -562,7 +562,7 @@ body {
 }
 
 .time-cell {
-    background: rgba(245, 245, 247, 0.6);
+    background: linear-gradient(135deg, var(--time-column-color-start) 0%, var(--time-column-color-end) 100%);
     font-weight: 700;
     font-size: 12px;
     color: var(--apple-gray);
@@ -900,68 +900,35 @@ body {
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(30px) saturate(180%);
     -webkit-backdrop-filter: blur(30px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-.settings-panel-modal {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: auto;
-    background: rgba(0, 0, 0, 0.3);
-    display: flex;
-    justify-content: flex-end;
-    z-index: 999;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    width: 100%;
-}
-
-.settings-panel-modal.visible {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.settings-content {
-    width: 420px;
-    height: 100%;
-    background: white;
-    overflow-y: auto;
     padding: 30px;
-    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.15);
-    animation: slideInRight 0.3s ease;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    position: sticky;
+    top: 20px;
+    display: block;
 }
 
-.settings-panel-modal.visible .settings-content {
-    animation: slideInRight 0.3s ease;
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-    }
-    to {
-        transform: translateX(0);
-    }
-}
-
-.settings-content h3 {
+.settings-panel h2 {
     color: var(--apple-dark);
     margin-bottom: 24px;
-    font-size: 1.3em;
-    text-align: center;
+    font-size: 1.4em;
     font-weight: 600;
     letter-spacing: -0.3px;
 }
 
+.settings-panel-modal {
+    display: none;
+}
+
+.settings-content {
+    width: 100%;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
 .settings-section {
-    margin-bottom: 28px;
+    margin-bottom: 20px;
     padding: 0;
     background: transparent;
     border-radius: 0;
@@ -971,32 +938,31 @@ body {
 
 .settings-section h4 {
     color: var(--apple-dark);
-    margin-bottom: 16px;
-    font-size: 1.1em;
+    margin-bottom: 12px;
+    font-size: 0.95em;
     font-weight: 600;
+    letter-spacing: 0;
     border-bottom: 2px solid var(--apple-blue);
-    padding-bottom: 12px;
-    letter-spacing: 0.3px;
+    padding-bottom: 8px;
 }
 
 .settings-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 16px;
-    margin-bottom: 0;
+    gap: 12px;
 }
 
 .setting-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px;
 }
 
 .setting-group label {
     font-weight: 600;
     color: var(--apple-dark);
-    font-size: 0.95em;
-    margin-bottom: 2px;
+    font-size: 0.85em;
+    margin-bottom: 0;
 }
 
 .setting-group input[type="range"] {
@@ -1007,71 +973,98 @@ body {
 
 .setting-group input[type="color"] {
     width: 100%;
-    height: 45px;
+    height: 35px;
     border: 2px solid var(--apple-border);
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
-    padding: 3px;
+    padding: 2px;
+    transition: all 0.3s ease;
 }
 
 .setting-group input[type="color"]:hover {
     border-color: var(--apple-blue);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
 
 .setting-group select,
 .setting-group input[type="file"] {
     width: 100%;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border: 2px solid var(--apple-border);
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 0.95em;
+    font-size: 0.85em;
     background-color: white;
     font-family: inherit;
+    transition: all 0.3s ease;
 }
 
 .setting-group select:hover,
 .setting-group input[type="file"]:hover {
     border-color: var(--apple-blue);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
 
 .setting-group input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     cursor: pointer;
     accent-color: var(--apple-blue);
 }
 
 .setting-group span {
-    font-size: 0.85em;
+    font-size: 0.75em;
     color: var(--apple-blue);
     font-weight: 700;
     text-align: center;
     background: rgba(0, 122, 255, 0.1);
-    padding: 6px 12px;
-    border-radius: 8px;
+    padding: 4px 8px;
+    border-radius: 6px;
     border: none;
+    margin-top: 2px;
 }
 
 .settings-actions {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     justify-content: center;
-    margin-top: 40px;
+    margin-top: 25px;
     padding-top: 20px;
-    border-top: 1px solid var(--apple-border);
+    border-top: 2px solid var(--apple-light-gray);
 }
 
 .btn-reset,
 .btn-close {
-    padding: 12px 24px;
+    padding: 10px 16px;
     border: none;
-    border-radius: 10px;
-    font-size: 0.95em;
+    border-radius: 8px;
+    font-size: 0.85em;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
     flex: 1;
+}
+
+.btn-reset {
+    background: #FF9500;
+    color: white;
+}
+
+.btn-reset:hover {
+    background: #E68A00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+}
+
+.btn-close {
+    background: var(--apple-blue);
+    color: white;
+}
+
+.btn-close:hover {
+    background: #0051D5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
 }
 
 .btn-reset {
@@ -1119,9 +1112,10 @@ body {
 }
 
 .setting-help {
-    font-size: 0.85em;
+    font-size: 0.8em;
     color: var(--apple-gray);
     margin-top: 4px;
+    font-style: italic;
 }
 
 .toggle-checkbox {

@@ -672,6 +672,7 @@ const defaultSettings = {
     headerSize: 13,
     timeColumnWidth: 80,
     borderRadius: 6,
+    scheduleTitleBgColor: '#f5f5f7',
     titleColor: '#1C1C1E',
     subtitleColor: '#8E8E93',
     titleShadowColor: '#000000',
@@ -707,6 +708,13 @@ function applyDesignSettings() {
     // Aplicar colores al título y subtítulo
     const titleEl = document.getElementById('scheduleTitle');
     const subtitleEl = document.getElementById('scheduleSubtitle');
+    const scheduleHeaderEl = document.querySelector('.schedule-header-editable');
+    
+    if (scheduleHeaderEl) {
+        // Aplicar color de fondo al contenedor del título del horario
+        scheduleHeaderEl.style.backgroundColor = designSettings.scheduleTitleBgColor || '#f5f5f7';
+    }
+    
     if (titleEl) {
         titleEl.style.color = designSettings.titleColor;
         // Aplicar sombra al título
@@ -740,13 +748,9 @@ function applyDesignSettings() {
     document.getElementById('borderRadius').value = designSettings.borderRadius;
     
     // Actualizar selectores de color
+    document.getElementById('scheduleTitleBgColor').value = designSettings.scheduleTitleBgColor || '#f5f5f7';
     document.getElementById('titleColor').value = designSettings.titleColor || '#1C1C1E';
     document.getElementById('subtitleColor').value = designSettings.subtitleColor || '#8E8E93';
-    document.getElementById('titleShadowColor').value = designSettings.titleShadowColor || '#000000';
-    document.getElementById('titleShadowBlur').value = designSettings.titleShadowBlur || 4;
-    document.getElementById('titleShadowBlurValue').textContent = (designSettings.titleShadowBlur || 4) + 'px';
-    document.getElementById('titleShadowOpacity').value = designSettings.titleShadowOpacity || 15;
-    document.getElementById('titleShadowOpacityValue').textContent = (designSettings.titleShadowOpacity || 15) + '%';
     document.getElementById('titleShadowColor').value = designSettings.titleShadowColor || '#000000';
     document.getElementById('titleShadowBlur').value = designSettings.titleShadowBlur || 4;
     document.getElementById('titleShadowBlurValue').textContent = (designSettings.titleShadowBlur || 4) + 'px';
@@ -811,6 +815,12 @@ document.getElementById('borderRadius').addEventListener('input', (e) => {
 });
 
 // Event listeners para selectores de color
+document.getElementById('scheduleTitleBgColor').addEventListener('input', (e) => {
+    designSettings.scheduleTitleBgColor = e.target.value;
+    applyDesignSettings();
+    saveDesignSettings();
+});
+
 document.getElementById('titleColor').addEventListener('input', (e) => {
     designSettings.titleColor = e.target.value;
     applyDesignSettings();
@@ -879,21 +889,12 @@ document.getElementById('scheduleBgColor').addEventListener('input', (e) => {
     saveDesignSettings();
 });
 
-// Botón de configuración
-document.getElementById('settingsBtn').addEventListener('click', () => {
-    const panel = document.getElementById('settingsPanel');
-    const mainGrid = document.querySelector('.main-grid');
-    panel.classList.toggle('visible');
-    mainGrid.classList.toggle('settings-open');
-});
-
-// Botón cerrar configuración
-document.getElementById('closeSettings').addEventListener('click', () => {
-    const panel = document.getElementById('settingsPanel');
-    const mainGrid = document.querySelector('.main-grid');
-    panel.classList.remove('visible');
-    mainGrid.classList.remove('settings-open');
-});
+// Botón cerrar configuración (ya no es necesario pero lo mantenemos)
+if (document.getElementById('closeSettings')) {
+    document.getElementById('closeSettings').addEventListener('click', () => {
+        // Panel siempre visible ahora
+    });
+}
 
 // Función para esperar a que el DOM esté listo
 function initializeBackgroundSettings() {

@@ -12,7 +12,6 @@
             <h1>📅 Mi Horario Semanal</h1>
             <p class="subtitle">Organiza tu semana de forma profesional</p>
             <div class="action-buttons-header">
-                <button id="settingsBtn" class="btn-settings">⚙️ Diseño</button>
                 <button id="exportJsonBtn" class="btn-export">📄 Exportar</button>
                 <button id="importJsonBtn" class="btn-import">📅 Importar</button>
                 <input type="file" id="importJsonFile" accept=".json" style="display: none;">
@@ -100,10 +99,14 @@
                     <p class="schedule-subtitle" contenteditable="true" id="scheduleSubtitle" spellcheck="false">Haz clic para editar</p>
                 </div>
                 
-                <!-- Panel de configuración -->
-                <div id="settingsPanel" class="settings-panel-modal">
-                    <div class="settings-content">
-                        <h3>⚙️ Configuración de Diseño</h3>
+                <div id="schedule" class="schedule">
+                    <!-- El horario se generará aquí -->
+                </div>
+            </main>
+
+            <aside id="settingsPanel" class="settings-panel">
+                <h2>⚙️ Opciones</h2>
+                <div class="settings-content">
                     
                     <div class="settings-section">
                         <h4>📏 Tamaños</h4>
@@ -144,6 +147,10 @@
                     <div class="settings-section">
                         <h4>🎨 Colores</h4>
                         <div class="settings-grid">
+                            <div class="setting-group">
+                                <label for="scheduleTitleBgColor">Color fondo título horario</label>
+                                <input type="color" id="scheduleTitleBgColor" value="#f5f5f7">
+                            </div>
                             <div class="setting-group">
                                 <label for="titleColor">Color del título</label>
                                 <input type="color" id="titleColor" value="#1C1C1E">
@@ -282,13 +289,8 @@
                         <button id="resetSettings" class="btn-reset">↺ Restaurar</button>
                         <button id="closeSettings" class="btn-close">Cerrar</button>
                     </div>
-                    </div>
                 </div>
-                
-                <div id="schedule" class="schedule">
-                    <!-- El horario se generará aquí -->
-                </div>
-            </main>
+            </aside>
         </div>
     </div>
     
