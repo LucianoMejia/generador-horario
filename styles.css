@@ -1033,8 +1033,7 @@ body {
     border-top: 2px solid var(--apple-light-gray);
 }
 
-.btn-reset,
-.btn-close {
+.btn-reset {
     padding: 10px 16px;
     border: none;
     border-radius: 8px;
@@ -1042,10 +1041,7 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
-    flex: 1;
-}
-
-.btn-reset {
+    width: 100%;
     background: #FF9500;
     color: white;
 }
@@ -1054,17 +1050,6 @@ body {
     background: #E68A00;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
-}
-
-.btn-close {
-    background: var(--apple-blue);
-    color: white;
-}
-
-.btn-close:hover {
-    background: #0051D5;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
 }
 
 .btn-reset {

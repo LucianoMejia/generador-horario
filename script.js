@@ -889,13 +889,6 @@ document.getElementById('scheduleBgColor').addEventListener('input', (e) => {
     saveDesignSettings();
 });
 
-// Botón cerrar configuración (ya no es necesario pero lo mantenemos)
-if (document.getElementById('closeSettings')) {
-    document.getElementById('closeSettings').addEventListener('click', () => {
-        // Panel siempre visible ahora
-    });
-}
-
 // Función para esperar a que el DOM esté listo
 function initializeBackgroundSettings() {
     // Inicializar valores de background si existen
