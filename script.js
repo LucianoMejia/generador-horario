@@ -359,8 +359,8 @@ document.getElementById('clearBtn').addEventListener('click', () => {
     }
 });
 
-// Descargar horario como imagen
-document.getElementById('downloadBtn').addEventListener('click', async () => {
+// Función para descargar horario como imagen
+async function downloadScheduleImage(orientation = 'vertical') {
     const scheduleTitle = document.getElementById('scheduleTitle').textContent || 'Mi Horario Semanal';
     
     try {
@@ -369,11 +369,20 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
         // Crear contenedor temporal con solo el horario (sin controles)
         const scheduleContainer = document.querySelector('.schedule-container');
         const captureContainer = document.createElement('div');
-        captureContainer.style.padding = '20px';
         captureContainer.style.position = 'absolute';
         captureContainer.style.left = '-10000px';
         captureContainer.style.top = '0';
-        captureContainer.style.width = scheduleContainer.offsetWidth + 'px';
+        
+        // Configurar dimensiones según orientación
+        if (orientation === 'horizontal') {
+            // Formato apaisado (más ancho)
+            captureContainer.style.width = '1800px';
+            captureContainer.style.padding = '40px 50px';
+        } else {
+            // Formato vertical (más alto)
+            captureContainer.style.width = scheduleContainer.offsetWidth + 'px';
+            captureContainer.style.padding = '20px';
+        }
         
         // Aplicar imagen de fondo si existe
         if (bgImageSettings.backgroundImage) {
@@ -412,8 +421,12 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
             }
         }
         
-        // Crear un estilo temporal
+        // Crear un estilo temporal con ajustes según orientación
         const styleSheet = document.createElement('style');
+        const fontSizeAdjust = orientation === 'horizontal' ? '1.15' : '1';
+        const cellHeightAdjust = orientation === 'horizontal' ? '50px' : styles.getPropertyValue('--cell-height').trim();
+        const cellPaddingAdjust = orientation === 'horizontal' ? '10px' : '8px';
+        
         styleSheet.textContent = `
             :root { ${cssVars} }
             * { 
@@ -422,28 +435,38 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
             .class-block {
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
                 border: 1px solid rgba(255, 255, 255, 0.25) !important;
+                font-size: calc(${styles.getPropertyValue('--font-size').trim()} * ${fontSizeAdjust}) !important;
             }
             #schedule {
                 background: rgba(255, 255, 255, 0.95) !important;
                 margin-top: 20px !important;
+                ${orientation === 'horizontal' ? 'width: 100% !important;' : ''}
             }
             .schedule-cell {
                 background: white !important;
                 border-color: rgba(0, 0, 0, 0.06) !important;
+                padding: ${cellPaddingAdjust} !important;
+                font-size: calc(${styles.getPropertyValue('--font-size').trim()} * ${fontSizeAdjust}) !important;
             }
             .schedule-header-cell {
                 background: rgba(245, 245, 247, 0.8) !important;
+                font-size: calc(${styles.getPropertyValue('--header-size').trim()} * ${fontSizeAdjust}) !important;
+                font-weight: 600 !important;
             }
             .time-cell {
+                background: rgba(245, 245, 247, 0.6) !important;
+                min-width: ${orientation === 'horizontal' ? '90px' : '80px'}
                 background: rgba(245, 245, 247, 0.6) !important;
             }
             .schedule-title {
                 color: ${designSettings.titleColor || '#1C1C1E'} !important;
                 margin: 0 !important;
+                font-size: ${orientation === 'horizontal' ? '2.5em' : '2em'} !important;
             }
             .schedule-subtitle {
                 color: ${designSettings.subtitleColor || '#8E8E93'} !important;
                 margin: 0 !important;
+                font-size: ${orientation === 'horizontal' ? '1.3em' : '1.1em'} !important;
             }
         `;
         document.head.appendChild(styleSheet);
@@ -473,7 +496,8 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
         // Descargar directamente
         const link = document.createElement('a');
         const fileName = scheduleTitle.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').toLowerCase();
-        link.download = `${fileName || 'horario'}-${new Date().toISOString().split('T')[0]}.png`;
+        const orientationSuffix = orientation === 'horizontal' ? '-horizontal' : '-vertical';
+        link.download = `${fileName || 'horario'}${orientationSuffix}-${new Date().toISOString().split('T')[0]}.png`;
         link.href = contentCanvas.toDataURL('image/png');
         link.click();
         
@@ -482,6 +506,16 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
         showNotification('❌ Error al descargar el horario', 'error');
         console.error(error);
     }
+}
+
+// Descargar horario vertical
+document.getElementById('downloadVerticalBtn').addEventListener('click', async () => {
+    await downloadScheduleImage('vertical');
+});
+
+// Descargar horario horizontal
+document.getElementById('downloadHorizontalBtn').addEventListener('click', async () => {
+    await downloadScheduleImage('horizontal');
 });
 
 // ===== IMPORTAR/EXPORTAR JSON =====
